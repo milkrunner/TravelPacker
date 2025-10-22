@@ -19,13 +19,23 @@ class User(Base, UserMixin):
     id = Column(String, primary_key=True)
     username = Column(String(80), unique=True, nullable=False, index=True)
     email = Column(String(120), unique=True, nullable=False, index=True)
-    password_hash = Column(String(255), nullable=False)
+    password_hash = Column(String(255), nullable=True)  # Nullable for OAuth users
     is_active = Column(Boolean, default=True)
     created_at = Column(DateTime, default=datetime.utcnow)
     last_login = Column(DateTime)
     
+    # OAuth fields
+    oauth_provider = Column(String(50), nullable=True)  # 'google', 'github', etc.
+    oauth_id = Column(String(255), nullable=True, index=True)  # Provider's user ID
+    profile_picture = Column(String(500), nullable=True)  # Profile image URL
+    
     # Relationships
     trips = relationship('Trip', back_populates='user', cascade='all, delete-orphan', lazy='dynamic')
+    
+    # Composite index for OAuth lookups
+    __table_args__ = (
+        Index('idx_user_oauth', 'oauth_provider', 'oauth_id'),
+    )
     
     def set_password(self, password):
         """Hash and set password"""
@@ -33,6 +43,8 @@ class User(Base, UserMixin):
     
     def check_password(self, password):
         """Verify password against hash"""
+        if not self.password_hash:
+            return False
         return check_password_hash(self.password_hash, password)
     
     def __repr__(self):

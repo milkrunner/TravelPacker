@@ -5,11 +5,12 @@ Flask-based web interface for the trip packing assistant
 
 import os
 
-from flask import Flask, render_template, request, jsonify, redirect, url_for, send_file, flash
+from flask import Flask, render_template, request, jsonify, redirect, url_for, send_file, flash, session
 from flask_wtf.csrf import CSRFProtect
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
 from flask_talisman import Talisman
+from flask_login import LoginManager, login_user, logout_user, login_required, current_user
 from datetime import datetime
 from dotenv import load_dotenv
 from pydantic import ValidationError
@@ -17,8 +18,10 @@ from src.services.trip_service import TripService
 from src.services.ai_service import AIService
 from src.services.packing_list_service import PackingListService
 from src.services.pdf_service import PDFService
+from src.services.oauth_service import GoogleSignInService
 from src.models.trip import TravelStyle, TransportMethod
-from src.database import init_db
+from src.database import init_db, get_session, close_session
+from src.database.models import User as DBUser
 from src.validators import (
     TripCreateRequest, ItemCreateRequest, ItemToggleRequest
 )
@@ -44,6 +47,25 @@ app.config['SECRET_KEY'] = secret_key
 
 # Enable CSRF protection
 csrf = CSRFProtect(app)
+
+# Initialize Flask-Login
+login_manager = LoginManager()
+login_manager.init_app(app)
+login_manager.login_view = 'login'
+login_manager.login_message = 'Please log in to access this page.'
+login_manager.login_message_category = 'info'
+
+# Initialize Google Sign-In service
+google_signin_service = GoogleSignInService(app)
+
+@login_manager.user_loader
+def load_user(user_id):
+    """Load user for Flask-Login"""
+    db_session = get_session()
+    try:
+        return db_session.query(DBUser).filter(DBUser.id == user_id).first()
+    finally:
+        close_session()
 
 # Setup rate limiting
 # Try to use Redis for distributed rate limiting, fall back to in-memory
@@ -87,13 +109,14 @@ else:
 # Configure Talisman for production-ready security headers
 csp = {
     'default-src': ["'self'"],
-    'script-src': ["'self'", "'unsafe-inline'"],  # Allow inline scripts for dynamic UI
-    'style-src': ["'self'", "'unsafe-inline'"],   # Allow inline styles for themes
-    'img-src': ["'self'", 'data:', 'https:'],     # Allow data URIs and HTTPS images
+    'script-src': ["'self'", "'unsafe-inline'", 'https://accounts.google.com/gsi/client'],  # Allow Google Identity Services
+    'style-src': ["'self'", "'unsafe-inline'", 'https://accounts.google.com/gsi/style'],    # Allow Google button styles
+    'img-src': ["'self'", 'data:', 'https:', 'https://lh3.googleusercontent.com'],          # Allow Google profile pictures
     'font-src': ["'self'"],
-    'connect-src': ["'self'"],
-    'frame-ancestors': ["'none'"],                 # Prevent clickjacking
-    'report-uri': ['/csp-report'],                 # CSP violation reporting endpoint
+    'connect-src': ["'self'", 'https://accounts.google.com'],  # Allow Google API calls
+    'frame-src': ['https://accounts.google.com'],              # Allow Google Sign-In iframe
+    'frame-ancestors': ["'none'"],                             # Prevent clickjacking
+    'report-uri': ['/csp-report'],                             # CSP violation reporting endpoint
 }
 
 # Initialize Talisman with flexible settings for development/production
@@ -122,13 +145,19 @@ packing_service = PackingListService(ai_service, use_database=True)
 @app.route('/')
 def index():
     """Home page - list all trips and templates"""
-    all_trips = trip_service.list_trips()
+    # If user is not logged in, show landing page
+    if not current_user.is_authenticated:
+        return render_template('index.html', trips=[], templates=[], show_landing=True)
+    
+    # Show user's trips and templates
+    all_trips = trip_service.list_trips(user_id=current_user.id)
     trips = [t for t in all_trips if not t.is_template]
     templates = [t for t in all_trips if t.is_template]
-    return render_template('index.html', trips=trips, templates=templates)
+    return render_template('index.html', trips=trips, templates=templates, show_landing=False)
 
 
 @app.route('/trip/new', methods=['GET', 'POST'])
+@login_required
 @limiter.limit("20 per hour")
 def new_trip():
     """Create a new trip"""
@@ -158,7 +187,7 @@ def new_trip():
             start_date=data.get('start_date'),
             end_date=data.get('end_date'),
             travelers=sanitized_travelers,
-            user_id=None,
+            user_id=current_user.id,
             travel_style=data.get('travel_style', 'leisure'),
             transportation=data.get('transportation', 'flight'),
             activities=sanitized_activities,
@@ -655,6 +684,91 @@ def ratelimit_error(error):
     # Extract retry_after from error description if available
     retry_after = getattr(error, 'description', None)
     return render_template('errors/429.html', retry_after=retry_after), 429
+
+
+@app.route('/login')
+def login():
+    """Login page with Google Sign-In"""
+    if current_user.is_authenticated:
+        return redirect(url_for('index'))
+    return render_template(
+        'login.html', 
+        google_signin_enabled=google_signin_service.enabled,
+        google_client_id=google_signin_service.client_id if google_signin_service.enabled else None
+    )
+
+
+@app.route('/auth/google', methods=['POST'])
+@csrf.exempt  # Google Sign-In sends POST from client-side
+def google_signin():
+    """Verify Google Sign-In token and log user in"""
+    if not google_signin_service.enabled:
+        return jsonify({'success': False, 'error': 'Google Sign-In not configured'}), 503
+    
+    try:
+        # Get the credential (JWT token) from the request
+        data = request.get_json()
+        if not data or 'credential' not in data:
+            return jsonify({'success': False, 'error': 'Missing credential'}), 400
+        
+        credential = data['credential']
+        
+        # Verify the token with Google
+        user_info = google_signin_service.verify_google_token(credential)
+        
+        if not user_info:
+            return jsonify({'success': False, 'error': 'Invalid token'}), 401
+        
+        # Check if email is verified
+        if not user_info.get('email_verified', False):
+            return jsonify({'success': False, 'error': 'Email not verified with Google'}), 403
+        
+        # Find or create user in database
+        user = google_signin_service.find_or_create_user(user_info)
+        
+        if not user:
+            return jsonify({'success': False, 'error': 'Failed to create user'}), 500
+        
+        # Log the user in with Flask-Login
+        login_user(user, remember=True)
+        
+        # Return success response
+        return jsonify({
+            'success': True,
+            'redirect': url_for('index'),
+            'user': {
+                'id': user.id,
+                'username': user.username,
+                'email': user.email,
+                'profile_picture': user.profile_picture
+            }
+        }), 200
+        
+    except Exception as e:
+        print(f"Google Sign-In error: {e}")
+        return jsonify({'success': False, 'error': 'Authentication error'}), 500
+
+
+@app.route('/logout')
+@login_required
+def logout():
+    """Log out the current user"""
+    user_id = current_user.id
+    username = current_user.username
+    
+    logout_user()
+    
+    # Audit log
+    AuditLogger.log_event(
+        event_type='user_logout',
+        user_id=user_id,
+        details=f'User logged out: {username}',
+        ip_address=request.remote_addr,
+        user_agent=request.headers.get('User-Agent', 'unknown')
+    )
+    
+    flash('You have been logged out successfully.', 'info')
+    return redirect(url_for('index'))
 
 
 @app.errorhandler(500)

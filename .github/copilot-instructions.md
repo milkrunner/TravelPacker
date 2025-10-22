@@ -296,15 +296,43 @@ docker compose up -d --build        # Deploy with rebuild
 python -c "import secrets; print(secrets.token_hex(32))"  # Generate secret
 ```
 
-## When Authentication is Re-enabled
-The app previously had Flask-Login authentication (removed per SECURITY_AUDIT.md). If re-enabling:
-- User model exists in `src/database/models.py`
-- UserRepository in `src/database/user_repository.py`
-- Login/register routes in `web_app.py` (commented out)
-- Add `@login_required` decorator to routes
-- Add `user_id` checks for trip ownership
-- See `docs/getting-started/authentication.md` (if exists)
+## Google OAuth Authentication
+
+The app uses **Google OAuth 2.0** for user authentication (no passwords stored):
+
+### Setup Required
+```bash
+# Get credentials at: https://console.cloud.google.com/apis/credentials
+GOOGLE_CLIENT_ID=your_client_id_here
+GOOGLE_CLIENT_SECRET=your_client_secret_here
+```
+
+### OAuth Flow
+1. User clicks "Continue with Google" on `/login`
+2. Redirects to Google OAuth consent screen
+3. Google redirects back to `/login/google/callback`
+4. `OAuthService` validates token and fetches user info
+5. User created/linked via `find_or_create_user()`
+6. Flask-Login session established
+
+### Key Components
+- **OAuthService** (`src/services/oauth_service.py`) - Authlib integration
+- **User Model** - OAuth fields: `oauth_provider`, `oauth_id`, `profile_picture`
+- **Password Optional** - `password_hash` nullable for OAuth-only users
+- **Account Linking** - Email match links OAuth to existing accounts
+
+### Route Protection
+```python
+@app.route('/trip/new')
+@login_required  # Flask-Login decorator
+def new_trip():
+    # current_user.id available here
+    trip_service.create_trip(..., user_id=current_user.id)
+```
+
+### Migration
+Run `python scripts/migrations/add_oauth_support.py` to add OAuth columns to existing database.
 
 ---
 
-**Project Status**: Production-ready with 11/11 security issues resolved. Authentication disabled by design for future custom implementation.
+**Project Status**: Production-ready with 11/11 security issues resolved. Google OAuth authentication enabled.
