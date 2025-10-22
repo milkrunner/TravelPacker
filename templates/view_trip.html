@@ -1,0 +1,572 @@
+{% extends "base.html" %} {% block title %}{{ trip.destination }} - NikNotes{%
+endblock %} {% block content %}
+<div class="container">
+  <div class="trip-header-section">
+    <div class="trip-info">
+      <h1>{{ trip.destination }}</h1>
+      <div class="trip-meta">
+        <span class="meta-item"
+          >📅 {{ trip.start_date }} to {{ trip.end_date }}</span
+        >
+        <span class="meta-item">⏱️ {{ trip.duration }} days</span>
+        <span class="meta-item">👥 {{ trip.travelers|length }} travelers</span>
+        <span
+          class="meta-item meta-badge meta-badge-{{ trip.travel_style.value }}"
+          >{{ trip.travel_style_display }}</span
+        >
+        <span class="meta-item">{{ trip.transport_display }}</span>
+      </div>
+    </div>
+    <div class="trip-actions">
+      <button
+        onclick="regenerateSuggestions('{{ trip.id }}')"
+        class="btn btn-secondary"
+      >
+        🤖 {% if items %}Get More Suggestions{% else %}Generate AI Suggestions{%
+        endif %}
+      </button>
+      <a
+        href="{{ url_for('export_trip_pdf', trip_id=trip.id) }}"
+        class="btn btn-primary"
+        download
+      >
+        📄 Export PDF
+      </a>
+      {% if not trip.is_template %}
+      <button
+        onclick="showSaveTemplateModal('{{ trip.id }}')"
+        class="btn btn-primary"
+      >
+        💾 Save as Template
+      </button>
+      {% endif %}
+      <button
+        onclick="showDeleteTripModal('{{ trip.id }}')"
+        class="btn btn-danger"
+      >
+        🗑️ Delete Trip
+      </button>
+    </div>
+  </div>
+
+  <div class="progress-section">
+    <div class="progress-header">
+      <h2>📦 Packing Progress</h2>
+      <div class="progress-stats">
+        <span class="stat packed">✓ {{ progress.packed_items }} packed</span>
+        <span class="stat unpacked"
+          >○ {{ progress.unpacked_items }} remaining</span
+        >
+      </div>
+    </div>
+    <div class="progress-bar">
+      <div
+        class="progress-fill"
+        style="width: {{ progress.completion_percentage }}%"
+      ></div>
+    </div>
+    <p class="progress-text">
+      {{ "%.0f"|format(progress.completion_percentage) }}% Complete
+    </p>
+  </div>
+
+  {% if trip.weather_conditions %}
+  <div class="weather-summary-section">
+    <div class="section-header">
+      <h2>🌤️ Weather & AI Analysis</h2>
+    </div>
+    <div class="weather-content">
+      <p class="weather-text">{{ trip.weather_conditions }}</p>
+    </div>
+  </div>
+  {% endif %}
+
+  <div class="packing-list-section">
+    <div class="section-header">
+      <h2>📋 Packing List</h2>
+      <button onclick="showAddItemModal()" class="btn btn-primary">
+        ➕ Add Item
+      </button>
+    </div>
+
+    {% if items %}
+    <div class="categories-container">
+      {% for category, category_items in items_by_category.items() %}
+      <div class="category-section">
+        <h3 class="category-title">{{ category.title() }}</h3>
+        <div class="items-list">
+          {% for item in category_items %}
+          <div
+            class="packing-item {% if item.is_packed %}packed{% endif %}"
+            data-item-id="{{ item.id }}"
+            draggable="true"
+            ondragstart="handleDragStart(event)"
+            ondragover="handleDragOver(event)"
+            ondrop="handleDrop(event)"
+            ondragend="handleDragEnd(event)"
+          >
+            <div class="item-checkbox">
+              <input
+                type="checkbox"
+                id="item-{{ item.id }}"
+                {%
+                if
+                item.is_packed
+                %}checked{%
+                endif
+                %}
+                onchange="toggleItem('{{ item.id }}', this.checked)"
+              />
+            </div>
+            <div class="item-content">
+              <label for="item-{{ item.id }}" class="item-name">
+                {{ item.name }} {% if item.ai_suggested %}
+                <span class="ai-badge">🤖 AI</span>
+                {% endif %} {% if item.is_essential %}
+                <span class="essential-badge">⭐ Essential</span>
+                {% endif %}
+              </label>
+              {% if item.quantity > 1 %}
+              <span class="item-quantity">× {{ item.quantity }}</span>
+              {% endif %} {% if item.notes %}
+              <p class="item-notes">{{ item.notes }}</p>
+              {% endif %}
+            </div>
+            <div class="item-actions">
+              <button
+                onclick="deleteItem('{{ item.id }}')"
+                class="btn-icon"
+                title="Delete"
+              >
+                🗑️
+              </button>
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+    {% else %}
+    <div class="empty-state">
+      <p>
+        No items in your packing list yet. Click "Get More Suggestions" to get
+        AI-powered recommendations!
+      </p>
+    </div>
+    {% endif %}
+  </div>
+</div>
+
+<!-- Add Item Modal -->
+<div id="addItemModal" class="modal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h2>Add Item</h2>
+      <button onclick="closeAddItemModal()" class="close-btn">&times;</button>
+    </div>
+    <form id="addItemForm" onsubmit="addItem(event)">
+      <div class="form-group">
+        <label for="itemName">Item Name</label>
+        <input type="text" id="itemName" required class="form-control" />
+      </div>
+      <div class="form-group">
+        <label for="itemCategory">Category</label>
+        <select id="itemCategory" class="form-control">
+          <option value="clothing">Clothing</option>
+          <option value="toiletries">Toiletries</option>
+          <option value="electronics">Electronics</option>
+          <option value="documents">Documents</option>
+          <option value="medical">Medical</option>
+          <option value="entertainment">Entertainment</option>
+          <option value="gear">Gear</option>
+          <option value="food">Food</option>
+          <option value="other">Other</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label for="itemQuantity">Quantity</label>
+        <input
+          type="number"
+          id="itemQuantity"
+          value="1"
+          min="1"
+          class="form-control"
+        />
+      </div>
+      <div class="form-group">
+        <label>
+          <input type="checkbox" id="itemEssential" />
+          Mark as Essential
+        </label>
+      </div>
+      <div class="form-group">
+        <label for="itemNotes">Notes (optional)</label>
+        <textarea id="itemNotes" rows="2" class="form-control"></textarea>
+      </div>
+      <div class="modal-actions">
+        <button
+          type="button"
+          onclick="closeAddItemModal()"
+          class="btn btn-secondary"
+        >
+          Cancel
+        </button>
+        <button type="submit" class="btn btn-primary">Add Item</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Save as Template Modal -->
+<div id="saveTemplateModal" class="modal">
+  <div class="modal-content" style="max-width: 500px">
+    <div class="modal-header">
+      <h2>💾 Save as Template</h2>
+      <button onclick="closeSaveTemplateModal()" class="close-btn">
+        &times;
+      </button>
+    </div>
+    <form id="saveTemplateForm" method="POST" action="/trip/{{ trip.id }}/save-as-template">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+      <div style="padding: 24px">
+        <label for="template_name" style="display: block; font-weight: 500; margin-bottom: 8px">
+          Template Name:
+        </label>
+        <input
+          type="text"
+          id="template_name"
+          name="template_name"
+          placeholder="e.g., Weekend Getaway, Business Trip"
+          required
+          style="width: 100%; padding: 8px 12px; border: 1px solid #d1d5db; border-radius: 4px"
+        />
+        <p style="font-size: 14px; color: #6b7280; margin-top: 8px">
+          Save this trip's settings and packing list as a reusable template.
+        </p>
+      </div>
+      <div class="modal-actions">
+        <button type="button" onclick="closeSaveTemplateModal()" class="btn btn-secondary">
+          Cancel
+        </button>
+        <button type="submit" class="btn btn-primary">
+          Save Template
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Delete Trip Confirmation Modal -->
+<div id="deleteTripModal" class="modal">
+  <div class="modal-content" style="max-width: 400px">
+    <div class="modal-header">
+      <h2>⚠️ Confirm Delete</h2>
+      <button onclick="closeDeleteTripModal()" class="close-btn">
+        &times;
+      </button>
+    </div>
+    <div style="padding: 24px; text-align: center">
+      <p style="font-size: 16px; margin-bottom: 24px">
+        Are you sure you want to delete this trip?
+      </p>
+      <p style="color: #dc2626; font-weight: 500; margin-bottom: 24px">
+        This action cannot be undone.
+      </p>
+    </div>
+    <div class="modal-actions">
+      <button onclick="closeDeleteTripModal()" class="btn btn-secondary">
+        Cancel
+      </button>
+      <button onclick="confirmDeleteTrip()" class="btn btn-danger">
+        Delete Trip
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Delete Item Confirmation Modal -->
+<div id="deleteItemModal" class="modal">
+  <div class="modal-content" style="max-width: 400px">
+    <div class="modal-header">
+      <h2>⚠️ Confirm Delete</h2>
+      <button onclick="closeDeleteItemModal()" class="close-btn">
+        &times;
+      </button>
+    </div>
+    <div style="padding: 24px; text-align: center">
+      <p style="font-size: 16px; margin-bottom: 24px">
+        Are you sure you want to delete this item?
+      </p>
+    </div>
+    <div class="modal-actions">
+      <button onclick="closeDeleteItemModal()" class="btn btn-secondary">
+        Cancel
+      </button>
+      <button onclick="confirmDeleteItem()" class="btn btn-danger">
+        Delete Item
+      </button>
+    </div>
+  </div>
+</div>
+{% endblock %} {% block extra_js %}
+<script>
+  const tripId = "{{ trip.id }}";
+  let draggedElement = null;
+
+  function handleDragStart(event) {
+    draggedElement = event.currentTarget;
+    event.currentTarget.style.opacity = "0.4";
+    event.dataTransfer.effectAllowed = "move";
+    // Use data-id instead of innerHTML for drag data transfer
+    event.dataTransfer.setData("text/plain", event.currentTarget.dataset.itemId || "");
+  }
+
+  function handleDragOver(event) {
+    if (event.preventDefault) {
+      event.preventDefault();
+    }
+    event.dataTransfer.dropEffect = "move";
+
+    const target = event.currentTarget;
+    if (
+      target !== draggedElement &&
+      target.classList.contains("packing-item")
+    ) {
+      target.style.borderTop = "3px solid #3b82f6";
+    }
+
+    return false;
+  }
+
+  function handleDrop(event) {
+    if (event.stopPropagation) {
+      event.stopPropagation();
+    }
+
+    const target = event.currentTarget;
+    target.style.borderTop = "";
+
+    if (
+      draggedElement !== target &&
+      target.classList.contains("packing-item")
+    ) {
+      // Get the parent container
+      const container = target.parentNode;
+
+      // Insert the dragged element before the target
+      container.insertBefore(draggedElement, target);
+
+      // Save the new order
+      saveItemOrder();
+    }
+
+    return false;
+  }
+
+  function handleDragEnd(event) {
+    event.currentTarget.style.opacity = "1";
+
+    // Remove all drag-over indicators
+    document.querySelectorAll(".packing-item").forEach((item) => {
+      item.style.borderTop = "";
+    });
+  }
+
+  function saveItemOrder() {
+    // Get all items in order
+    const items = [];
+    document.querySelectorAll(".packing-item").forEach((item, index) => {
+      items.push({
+        id: item.dataset.itemId,
+        order: index,
+      });
+    });
+
+    // Send to server
+    fetch(`/api/trip/${tripId}/reorder-items`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-CSRFToken": window.csrfToken
+      },
+      body: JSON.stringify({ items: items }),
+    })
+      .then((response) => response.json())
+      .then((data) => {
+        if (data.success) {
+          console.log("Item order saved");
+        }
+      })
+      .catch((error) => {
+        console.error("Error saving order:", error);
+      });
+  }
+
+  function toggleItem(itemId, isPacked) {
+    fetch(`/api/item/${itemId}/toggle`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-CSRFToken": window.csrfToken
+      },
+      body: JSON.stringify({ is_packed: isPacked }),
+    })
+      .then((response) => response.json())
+      .then((data) => {
+        if (data.success) {
+          const itemEl = document.querySelector(`[data-item-id="${itemId}"]`);
+          if (isPacked) {
+            itemEl.classList.add("packed");
+          } else {
+            itemEl.classList.remove("packed");
+          }
+          location.reload(); // Reload to update progress
+        }
+      });
+  }
+
+  let deleteTripId = null;
+
+  function showSaveTemplateModal(tripId) {
+    document.getElementById("saveTemplateModal").style.display = "flex";
+  }
+
+  function closeSaveTemplateModal() {
+    document.getElementById("saveTemplateModal").style.display = "none";
+  }
+
+  function showDeleteTripModal(tripId) {
+    deleteTripId = tripId;
+    document.getElementById("deleteTripModal").style.display = "flex";
+  }
+
+  function closeDeleteTripModal() {
+    document.getElementById("deleteTripModal").style.display = "none";
+    deleteTripId = null;
+  }
+
+  function confirmDeleteTrip() {
+    if (!deleteTripId) return;
+
+    // Create a form and submit it with CSRF token
+    const form = document.createElement("form");
+    form.method = "POST";
+    form.action = `/trip/${deleteTripId}/delete`;
+    
+    const csrfInput = document.createElement("input");
+    csrfInput.type = "hidden";
+    csrfInput.name = "csrf_token";
+    csrfInput.value = window.csrfToken;
+    form.appendChild(csrfInput);
+    
+    document.body.appendChild(form);
+    form.submit();
+  }
+
+  let deleteItemId = null;
+
+  function deleteItem(itemId) {
+    deleteItemId = itemId;
+    document.getElementById("deleteItemModal").style.display = "flex";
+  }
+
+  function closeDeleteItemModal() {
+    document.getElementById("deleteItemModal").style.display = "none";
+    deleteItemId = null;
+  }
+
+  function confirmDeleteItem() {
+    if (!deleteItemId) return;
+
+    fetch(`/api/item/${deleteItemId}`, {
+      method: "DELETE",
+      headers: {
+        "X-CSRFToken": window.csrfToken
+      }
+    })
+      .then((response) => response.json())
+      .then((data) => {
+        if (data.success) {
+          closeDeleteItemModal();
+          location.reload();
+        } else {
+          alert("Failed to delete item: " + (data.error || "Unknown error"));
+        }
+      })
+      .catch((error) => {
+        console.error("Error deleting item:", error);
+        alert("Failed to delete item. Please try again.");
+      });
+  }
+
+  function showAddItemModal() {
+    document.getElementById("addItemModal").style.display = "flex";
+  }
+
+  function closeAddItemModal() {
+    document.getElementById("addItemModal").style.display = "none";
+    document.getElementById("addItemForm").reset();
+  }
+
+  function addItem(event) {
+    event.preventDefault();
+
+    const data = {
+      name: document.getElementById("itemName").value,
+      category: document.getElementById("itemCategory").value,
+      quantity: parseInt(document.getElementById("itemQuantity").value),
+      is_essential: document.getElementById("itemEssential").checked,
+      notes: document.getElementById("itemNotes").value,
+    };
+
+    fetch(`/api/trip/${tripId}/item`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-CSRFToken": window.csrfToken
+      },
+      body: JSON.stringify(data),
+    })
+      .then((response) => response.json())
+      .then((result) => {
+        if (result.success) {
+          closeAddItemModal();
+          location.reload();
+        }
+      });
+  }
+
+  function regenerateSuggestions(tripId) {
+    const btn = event.target;
+    btn.disabled = true;
+    btn.textContent = "🤖 Generating...";
+
+    fetch(`/api/trip/${tripId}/regenerate`, {
+      method: "POST",
+      headers: {
+        "X-CSRFToken": window.csrfToken
+      }
+    })
+      .then((response) => response.json())
+      .then((data) => {
+        if (data.success) {
+          // Reload the page to show new items
+          location.reload();
+        } else {
+          alert(
+            "Failed to generate suggestions: " + (data.error || "Unknown error")
+          );
+          btn.disabled = false;
+          btn.textContent = "🤖 Get More Suggestions";
+        }
+      })
+      .catch((error) => {
+        console.error("Error generating suggestions:", error);
+        alert("Failed to generate suggestions. Please try again.");
+        btn.disabled = false;
+        btn.textContent = "🤖 Get More Suggestions";
+      });
+  }
+</script>
+{% endblock %}

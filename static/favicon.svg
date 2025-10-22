@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+  <!-- Backpack body -->
+  <rect x="25" y="35" width="50" height="55" rx="5" fill="#3b82f6"/>
+  
+  <!-- Backpack top flap -->
+  <path d="M 25 35 Q 25 25, 35 25 L 65 25 Q 75 25, 75 35 L 75 45 L 25 45 Z" fill="#2563eb"/>
+  
+  <!-- Front pocket -->
+  <rect x="32" y="50" width="36" height="25" rx="3" fill="#60a5fa"/>
+  
+  <!-- Zipper line -->
+  <line x1="35" y1="62" x2="65" y2="62" stroke="#1e40af" stroke-width="1.5"/>
+  
+  <!-- Straps -->
+  <path d="M 35 25 Q 35 15, 42 15 L 42 30" stroke="#1e293b" stroke-width="3" fill="none"/>
+  <path d="M 65 25 Q 65 15, 58 15 L 58 30" stroke="#1e293b" stroke-width="3" fill="none"/>
+  
+  <!-- Buckles -->
+  <circle cx="42" cy="32" r="2" fill="#fbbf24"/>
+  <circle cx="58" cy="32" r="2" fill="#fbbf24"/>
+  
+  <!-- Side straps -->
+  <rect x="23" y="55" width="3" height="20" rx="1.5" fill="#475569"/>
+  <rect x="74" y="55" width="3" height="20" rx="1.5" fill="#475569"/>
+</svg>

@@ -1,0 +1,125 @@
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:16-alpine
+    container_name: niknotes-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-niknotes_db}
+      POSTGRES_USER: ${POSTGRES_USER:-niknotes_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD environment variable is required}
+      # Performance tuning
+      POSTGRES_INITDB_ARGS: "-E UTF8 --locale=C"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./docker/postgres-init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    ports:
+      - "127.0.0.1:5432:5432"  # Bind to localhost only for security
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U niknotes_user -d niknotes_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - niknotes-network
+    # Performance configuration
+    command:
+      - "postgres"
+      - "-c" 
+      - "shared_buffers=256MB"
+      - "-c"
+      - "effective_cache_size=1GB"
+      - "-c"
+      - "work_mem=16MB"
+      - "-c"
+      - "maintenance_work_mem=128MB"
+      - "-c"
+      - "random_page_cost=1.1"
+      - "-c"
+      - "effective_io_concurrency=200"
+      - "-c"
+      - "max_parallel_workers_per_gather=4"
+      - "-c"
+      - "max_parallel_workers=8"
+      - "-c"
+      - "wal_buffers=16MB"
+      - "-c"
+      - "max_connections=100"
+
+  # Redis Cache
+  redis:
+    image: redis:7-alpine
+    container_name: niknotes-redis
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:6379:6379"  # Bind to localhost only for security
+    volumes:
+      - redis_data:/data
+      - ./docker/redis.conf:/usr/local/etc/redis/redis.conf:ro
+    command: redis-server /usr/local/etc/redis/redis.conf
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - niknotes-network
+
+  # NikNotes Web Application
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: niknotes-web
+    restart: unless-stopped
+    environment:
+      # Database configuration
+      # Note: If PostgreSQL is unavailable, the app automatically falls back to SQLite (niknotes.db)
+      DATABASE_URL: postgresql://${POSTGRES_USER:-niknotes_user}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-niknotes_db}
+      # Redis configuration
+      # Note: Redis is optional - if unavailable, caching will be disabled automatically
+      REDIS_URL: redis://redis:6379/0
+      # Gemini AI configuration (set your API key)
+      GEMINI_API_KEY: ${GEMINI_API_KEY:-your_api_key_here}
+      GEMINI_MODEL: gemini-2.5-flash
+      # Weather API configuration (OpenWeatherMap)
+      # Get free API key at: https://openweathermap.org/api
+      WEATHER_API_KEY: ${WEATHER_API_KEY:-your_weather_api_key_here}
+      WEATHER_UNITS: metric
+      WEATHER_PROVIDER: openweathermap
+      # Flask configuration
+      FLASK_ENV: production
+      FLASK_DEBUG: 0
+      FLASK_SECRET_KEY: ${FLASK_SECRET_KEY}
+    ports:
+      - "5000:5000"
+    volumes:
+      # Mount for development (comment out for production)
+      # - .:/app
+      # Persistent data directory
+      - app_data:/app/data
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "python", "-c", "import requests; r = requests.get('http://localhost:5000/health', timeout=5); exit(0 if r.status_code == 200 and r.json().get('status') == 'healthy' else 1)"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    networks:
+      - niknotes-network
+
+volumes:
+  postgres_data:
+    driver: local
+  redis_data:
+    driver: local
+  app_data:
+    driver: local
+
+networks:
+  niknotes-network:
+    driver: bridge

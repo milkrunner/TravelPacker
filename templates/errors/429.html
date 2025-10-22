@@ -1,0 +1,222 @@
+{% extends "base.html" %}
+
+{% block title %}429 - Too Many Requests{% endblock %}
+
+{% block content %}
+<div class="error-container">
+  <div class="error-content">
+    <div class="error-icon">
+      <svg xmlns="http://www.w3.org/2000/svg" width="120" height="120" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <circle cx="12" cy="12" r="10"></circle>
+        <polyline points="12 6 12 12 16 14"></polyline>
+      </svg>
+    </div>
+    
+    <h1 class="error-title">429</h1>
+    <h2 class="error-subtitle">Too Many Requests</h2>
+    
+    <p class="error-message">
+      You've made too many requests in a short time. Please wait a moment and try again.
+    </p>
+    
+    {% if retry_after %}
+    <p class="error-details">
+      Please wait <strong>{{ retry_after }} seconds</strong> before trying again.
+    </p>
+    {% endif %}
+    
+    <div class="error-actions">
+      <a href="{{ url_for('index') }}" class="btn btn-primary">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+        </svg>
+        Go Home
+      </a>
+      <button onclick="location.reload()" class="btn btn-secondary">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <polyline points="23 4 23 10 17 10"></polyline>
+          <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path>
+        </svg>
+        Try Again
+      </button>
+    </div>
+    
+    <div class="error-info">
+      <h3>Why am I seeing this?</h3>
+      <p>Rate limiting helps protect the service from abuse and ensures fair access for all users.</p>
+      <ul>
+        <li><strong>Login attempts:</strong> Limited to 10 per hour</li>
+        <li><strong>API requests:</strong> Limited to 50-100 per hour</li>
+        <li><strong>General browsing:</strong> Limited to 50 per hour</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<style>
+  .error-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 70vh;
+    padding: 2rem;
+  }
+  
+  .error-content {
+    text-align: center;
+    max-width: 700px;
+  }
+  
+  .error-icon {
+    color: #f59e0b;
+    margin-bottom: 2rem;
+    animation: rotate 3s linear infinite;
+  }
+  
+  @keyframes rotate {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+  }
+  
+  .error-title {
+    font-size: 6rem;
+    font-weight: bold;
+    margin: 0;
+    color: var(--text-color, #1f2937);
+    line-height: 1;
+  }
+  
+  .error-subtitle {
+    font-size: 2rem;
+    margin: 1rem 0;
+    color: var(--text-color, #1f2937);
+  }
+  
+  .error-message {
+    font-size: 1.125rem;
+    color: var(--text-muted, #6b7280);
+    margin: 2rem 0 1rem;
+  }
+  
+  .error-details {
+    font-size: 1rem;
+    color: var(--text-muted, #6b7280);
+    margin-bottom: 2rem;
+  }
+  
+  .error-details strong {
+    color: #f59e0b;
+    font-weight: 600;
+  }
+  
+  .error-actions {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+    flex-wrap: wrap;
+    margin-bottom: 3rem;
+  }
+  
+  .error-actions .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1.5rem;
+    text-decoration: none;
+    border-radius: 0.5rem;
+    font-weight: 500;
+    transition: all 0.2s;
+    border: none;
+    cursor: pointer;
+    font-size: 1rem;
+  }
+  
+  .error-actions .btn-primary {
+    background-color: var(--primary-color, #3b82f6);
+    color: white;
+  }
+  
+  .error-actions .btn-primary:hover {
+    background-color: var(--primary-hover, #2563eb);
+    transform: translateY(-2px);
+  }
+  
+  .error-actions .btn-secondary {
+    background-color: transparent;
+    color: var(--text-color, #1f2937);
+    border: 2px solid var(--border-color, #e5e7eb);
+  }
+  
+  .error-actions .btn-secondary:hover {
+    background-color: var(--background-secondary, #f9fafb);
+    transform: translateY(-2px);
+  }
+  
+  .error-info {
+    text-align: left;
+    background: var(--background-secondary, #f9fafb);
+    border-radius: 0.5rem;
+    padding: 1.5rem;
+    margin-top: 3rem;
+  }
+  
+  .error-info h3 {
+    margin: 0 0 1rem;
+    color: var(--text-color, #1f2937);
+    font-size: 1.25rem;
+  }
+  
+  .error-info p {
+    color: var(--text-muted, #6b7280);
+    margin: 0 0 1rem;
+  }
+  
+  .error-info ul {
+    margin: 0;
+    padding-left: 1.5rem;
+    color: var(--text-muted, #6b7280);
+  }
+  
+  .error-info li {
+    margin: 0.5rem 0;
+  }
+  
+  .error-info strong {
+    color: var(--text-color, #1f2937);
+  }
+  
+  /* Dark mode support */
+  body.dark-mode .error-title,
+  body.dark-mode .error-subtitle {
+    color: #f9fafb;
+  }
+  
+  body.dark-mode .error-message,
+  body.dark-mode .error-details {
+    color: #9ca3af;
+  }
+  
+  body.dark-mode .error-actions .btn-secondary {
+    color: #f9fafb;
+    border-color: #4b5563;
+  }
+  
+  body.dark-mode .error-actions .btn-secondary:hover {
+    background-color: #374151;
+  }
+  
+  body.dark-mode .error-info {
+    background: #1f2937;
+  }
+  
+  body.dark-mode .error-info h3,
+  body.dark-mode .error-info strong {
+    color: #f9fafb;
+  }
+  
+  body.dark-mode .error-info p,
+  body.dark-mode .error-info ul {
+    color: #9ca3af;
+  }
+</style>
+{% endblock %}

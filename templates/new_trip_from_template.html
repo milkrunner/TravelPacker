@@ -1,0 +1,221 @@
+{% extends "base.html" %} {% block title %}New Trip from Template - NikNotes{% endblock %} {%
+block content %}
+<div class="container">
+  <div class="page-header">
+    <h1>✈️ Create Trip from Template: {{ template.template_name }}</h1>
+    <p class="subtitle">
+      Using template settings for destination, travel style, and transportation.
+    </p>
+  </div>
+
+  <div class="form-container">
+    <form method="POST" action="{{ url_for('create_from_template', template_id=template.id) }}" class="trip-form">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+      <div class="form-section">
+        <h2>📍 Destination & Dates</h2>
+
+        <div class="form-group">
+          <label for="destination">Where are you going?</label>
+          <input
+            type="text"
+            id="destination"
+            name="destination"
+            required
+            value="{{ template.destination }}"
+            placeholder="e.g., Paris, France"
+            class="form-control"
+          />
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="start_date">Start Date</label>
+            <input
+              type="date"
+              id="start_date"
+              name="start_date"
+              required
+              class="form-control"
+            />
+          </div>
+          <div class="form-group">
+            <label for="end_date">End Date</label>
+            <input
+              type="date"
+              id="end_date"
+              name="end_date"
+              required
+              class="form-control"
+            />
+          </div>
+        </div>
+      </div>
+
+      <div class="form-section">
+        <h2>👥 Who's Traveling?</h2>
+        <div class="form-group">
+          <label>Travelers</label>
+          <div id="traveler-list" class="traveler-list-container">
+            {% for traveler in template.travelers %}
+            <div class="traveler-row">
+              <div class="traveler-input-group">
+                <select name="travelers" class="form-control traveler-select">
+                  <option value="Adult" {% if traveler == "Adult" %}selected{% endif %}>Adult</option>
+                  <option value="Child" {% if traveler == "Child" %}selected{% endif %}>Child</option>
+                  <option value="Infant" {% if traveler == "Infant" %}selected{% endif %}>Infant</option>
+                </select>
+                <button type="button" class="btn btn-remove" style="display: {% if loop.first and loop.last %}none{% else %}{% endif %};">
+                  <span class="btn-text">Remove</span>
+                  <span class="remove-tooltip">Remove this traveler</span>
+                </button>
+              </div>
+            </div>
+            {% endfor %}
+          </div>
+          <button type="button" class="btn btn-add-traveler" id="add-traveler">
+            <span class="add-icon">+</span>
+            <span>Add Traveler</span>
+          </button>
+        </div>
+      </div>
+
+      <div class="form-section">
+        <h2>🎯 Trip Style & Transportation</h2>
+        <p class="form-note">These settings are pre-filled from the template.</p>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="travel_style">Travel Style</label>
+            <select id="travel_style" name="travel_style" class="form-control" disabled>
+              {% for style in travel_styles %}
+              <option value="{{ style }}" {% if style == template.travel_style.value %}selected{% endif %}>
+                {{ style.title() }}
+              </option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="transportation">Transportation</label>
+            <select
+              id="transportation"
+              name="transportation"
+              class="form-control"
+              disabled
+            >
+              {% for method in transport_methods %}
+              <option value="{{ method }}" {% if method == template.transportation.value %}selected{% endif %}>
+                {{ method.replace('_', ' ').title() }}
+              </option>
+              {% endfor %}
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <div class="form-section">
+        <h2>🎨 Additional Details</h2>
+
+        <div class="form-group">
+          <label for="activities">Planned Activities (comma-separated)</label>
+          <input
+            type="text"
+            id="activities"
+            name="activities"
+            value="{{ template.activities | join(', ') }}"
+            placeholder="e.g., Hiking, Swimming, Museums"
+            class="form-control"
+            disabled
+          />
+        </div>
+
+        <div class="form-group">
+          <label for="special_notes">Special Notes</label>
+          <textarea
+            id="special_notes"
+            name="special_notes"
+            rows="3"
+            placeholder="Any special requirements, weather conditions, or notes..."
+            class="form-control"
+          >{{ template.special_notes or '' }}</textarea>
+        </div>
+      </div>
+
+      <div class="form-actions">
+        <a href="{{ url_for('index') }}" class="btn btn-secondary">Cancel</a>
+        <button type="submit" class="btn btn-primary">
+          Create Trip from Template
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %} {% block extra_js %}
+<script>
+  // Set minimum date to today
+  const today = new Date().toISOString().split("T")[0];
+  document.getElementById("start_date").setAttribute("min", today);
+  // Update end date minimum when start date changes
+  document.getElementById("start_date").addEventListener("change", function () {
+    document.getElementById("end_date").setAttribute("min", this.value);
+  });
+
+  // Dynamic traveler list
+  document
+    .getElementById("add-traveler")
+    .addEventListener("click", function () {
+      const list = document.getElementById("traveler-list");
+      const row = document.createElement("div");
+      row.className = "traveler-row";
+      
+      // Create elements safely without innerHTML
+      const inputGroup = document.createElement("div");
+      inputGroup.className = "traveler-input-group";
+      
+      const select = document.createElement("select");
+      select.name = "travelers";
+      select.className = "form-control traveler-select";
+      
+      const options = ["Adult", "Child", "Infant"];
+      options.forEach(optionText => {
+        const option = document.createElement("option");
+        option.value = optionText;
+        option.textContent = optionText;
+        select.appendChild(option);
+      });
+      
+      const button = document.createElement("button");
+      button.type = "button";
+      button.className = "btn btn-remove";
+      
+      const btnText = document.createElement("span");
+      btnText.className = "btn-text";
+      btnText.textContent = "Remove";
+      
+      const tooltip = document.createElement("span");
+      tooltip.className = "remove-tooltip";
+      tooltip.textContent = "Remove this traveler";
+      
+      button.appendChild(btnText);
+      button.appendChild(tooltip);
+      inputGroup.appendChild(select);
+      inputGroup.appendChild(button);
+      row.appendChild(inputGroup);
+      
+      list.appendChild(row);
+      updateRemoveButtons();
+    });
+
+  function updateRemoveButtons() {
+    const rows = document.querySelectorAll(".traveler-row");
+    rows.forEach((row, idx) => {
+      const btn = row.querySelector(".btn-remove");
+      btn.style.display = rows.length > 1 ? "" : "none";
+      btn.onclick = function () {
+        row.remove();
+        updateRemoveButtons();
+      };
+    });
+  }
+  updateRemoveButtons();
+</script>
+{% endblock %}

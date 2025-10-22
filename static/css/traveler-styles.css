@@ -1,0 +1,193 @@
+/* Traveler List Specific Styles */
+
+.traveler-list-container {
+    margin-bottom: 1rem;
+}
+
+.traveler-row {
+    display: flex;
+    align-items: center;
+    margin-bottom: 0.75rem;
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    border-radius: 0.75rem;
+    padding: 0.75rem 1rem;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.06);
+    transition: all 0.3s ease;
+    opacity: 0;
+    transform: translateY(10px) scale(0.98);
+    animation: fadeInTraveler 0.4s forwards;
+}
+
+@keyframes fadeInTraveler {
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+.traveler-row:hover {
+    box-shadow: 0 4px 12px rgba(59,130,246,0.15);
+    background: linear-gradient(135deg, #e0e7ff 0%, #c7d2fe 100%);
+}
+
+.traveler-input-group {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    width: 100%;
+}
+
+.traveler-select {
+    flex: 1;
+    max-width: 250px;
+    font-size: 1.05rem;
+    font-weight: 500;
+    padding: 0.75rem 3rem 0.75rem 1.25rem;
+    border-radius: 0.75rem;
+    border: 2px solid #e5e7eb;
+    background: linear-gradient(to bottom, #ffffff, #f9fafb);
+    background-image: 
+        url('data:image/svg+xml;utf8,<svg fill="%233b82f6" height="20" viewBox="0 0 20 20" width="20" xmlns="http://www.w3.org/2000/svg"><path d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"/></svg>'),
+        linear-gradient(to bottom, #ffffff, #f9fafb);
+    background-repeat: no-repeat, repeat;
+    background-position: right 1rem center, 0 0;
+    background-size: 1.5em 1.5em, 100% 100%;
+    appearance: none;
+    box-shadow: 
+        0 1px 3px rgba(0,0,0,0.05),
+        inset 0 1px 2px rgba(255,255,255,0.8);
+    transition: all 0.2s ease;
+    cursor: pointer;
+    color: #1f2937;
+}
+
+.traveler-select:hover {
+    border-color: #3b82f6;
+    background: linear-gradient(to bottom, #ffffff, #f0f9ff);
+    box-shadow: 
+        0 2px 6px rgba(59,130,246,0.15),
+        inset 0 1px 2px rgba(255,255,255,0.8);
+    transform: translateY(-1px);
+}
+
+.traveler-select:focus {
+    outline: none;
+    border-color: #3b82f6;
+    background: #ffffff;
+    box-shadow: 
+        0 0 0 3px rgba(59,130,246,0.1),
+        0 2px 6px rgba(59,130,246,0.2),
+        inset 0 1px 2px rgba(255,255,255,0.8);
+    transform: translateY(0);
+}
+
+/* Custom option styling (limited browser support but progressive enhancement) */
+.traveler-select option {
+    padding: 0.75rem;
+    font-size: 1rem;
+    background: #ffffff;
+    color: #1f2937;
+}
+
+.traveler-select option:hover {
+    background: #eff6ff;
+}
+
+/* Remove Button */
+.btn-remove {
+    margin-left: auto;
+    background: #ef4444;
+    color: #fff;
+    border-radius: 0.75rem;
+    padding: 0.5rem 1.25rem;
+    font-size: 0.95rem;
+    font-weight: 500;
+    border: none;
+    cursor: pointer;
+    box-shadow: 0 2px 4px rgba(239,68,68,0.15);
+    transition: all 0.2s ease;
+    position: relative;
+}
+
+.btn-remove .btn-text {
+    display: inline-block;
+}
+
+.btn-remove:hover {
+    background: #dc2626;
+    box-shadow: 0 4px 8px rgba(239,68,68,0.25);
+    transform: translateY(-1px);
+}
+
+.btn-remove:active {
+    transform: translateY(0);
+}
+
+/* Tooltip */
+.remove-tooltip {
+    display: none;
+    position: absolute;
+    bottom: calc(100% + 0.5rem);
+    left: 50%;
+    transform: translateX(-50%) translateY(-5px);
+    background: #1e293b;
+    color: #fff;
+    padding: 0.5rem 1rem;
+    border-radius: 0.5rem;
+    font-size: 0.875rem;
+    white-space: nowrap;
+    box-shadow: 0 4px 12px rgba(30,41,59,0.2);
+    z-index: 1000;
+    opacity: 0;
+    pointer-events: none;
+    transition: all 0.25s ease;
+}
+
+.remove-tooltip::after {
+    content: '';
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    border: 6px solid transparent;
+    border-top-color: #1e293b;
+}
+
+.btn-remove:hover .remove-tooltip {
+    display: block;
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+}
+
+/* Add Traveler Button */
+.btn-add-traveler {
+    margin-top: 0.5rem;
+    font-size: 1.05rem;
+    font-weight: 500;
+    border-radius: 0.75rem;
+    box-shadow: 0 2px 4px rgba(59,130,246,0.15);
+    transition: all 0.2s ease;
+    background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+    color: #fff;
+    border: none;
+    padding: 0.75rem 1.5rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    cursor: pointer;
+}
+
+.btn-add-traveler .add-icon {
+    font-size: 1.3em;
+    font-weight: bold;
+}
+
+.btn-add-traveler:hover {
+    box-shadow: 0 6px 16px rgba(59,130,246,0.25);
+    transform: translateY(-2px);
+    background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+}
+
+.btn-add-traveler:active {
+    transform: translateY(0);
+}

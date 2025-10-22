@@ -1,0 +1,39 @@
+# Core dependencies
+setuptools>=80.9.0  # Security: Fixed PYSEC-2022-43012, PYSEC-2025-49
+flask==3.0.0
+flask-login==0.6.3
+flask-wtf==1.2.1
+flask-limiter==3.5.0
+flask-talisman==1.1.0
+python-dotenv==1.0.0
+requests==2.31.0
+
+# AI/ML
+google-generativeai==0.3.2
+
+# Data handling
+pydantic==2.5.0
+
+# Database
+sqlalchemy==2.0.23
+psycopg2-binary==2.9.9
+
+# Performance & Caching
+redis==5.0.1
+
+# PDF Generation
+reportlab==4.0.7
+
+# Security - Content Sanitization
+bleach==6.1.0  # XSS protection for user-generated content
+
+# Testing
+pytest==7.4.3
+pytest-cov==4.1.0
+
+# Security - Dependency Scanning
+pip-audit==2.9.0  # Latest version with enhanced OSV database support
+
+# Note: pip 25.2 has GHSA-4xh5-x5gv-qwph (HIGH - tarfile path traversal)
+# Fix planned for pip 25.3 (not yet released). Risk accepted - LOW impact
+# with mitigations: only install from trusted sources (PyPI)

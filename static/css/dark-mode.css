@@ -1,0 +1,422 @@
+/* Dark Mode Styles */
+
+/* Root Variables for Light Mode (Default) */
+:root {
+    --bg-primary: #ffffff;
+    --bg-secondary: #f9fafb;
+    --bg-tertiary: #f3f4f6;
+    --text-primary: #1f2937;
+    --text-secondary: #4b5563;
+    --text-tertiary: #6b7280;
+    --border-color: #e5e7eb;
+    --border-color-hover: #d1d5db;
+    --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+    --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+    --card-bg: #ffffff;
+    --navbar-bg: #ffffff;
+    --footer-bg: #f9fafb;
+    --input-bg: #ffffff;
+    --input-border: #d1d5db;
+    --modal-overlay: rgba(0, 0, 0, 0.5);
+    --modal-bg: #ffffff;
+}
+
+/* Dark Mode Variables */
+body.dark-mode {
+    --bg-primary: #111827;
+    --bg-secondary: #1f2937;
+    --bg-tertiary: #374151;
+    --text-primary: #f9fafb;
+    --text-secondary: #d1d5db;
+    --text-tertiary: #9ca3af;
+    --border-color: #374151;
+    --border-color-hover: #4b5563;
+    --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.3);
+    --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.4);
+    --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.5);
+    --card-bg: #1f2937;
+    --navbar-bg: #1f2937;
+    --footer-bg: #1f2937;
+    --input-bg: #374151;
+    --input-border: #4b5563;
+    --modal-overlay: rgba(0, 0, 0, 0.75);
+    --modal-bg: #1f2937;
+}
+
+/* Apply Variables to Elements */
+body {
+    background-color: var(--bg-primary);
+    color: var(--text-primary);
+    transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* Navbar */
+.navbar {
+    background-color: var(--navbar-bg);
+    border-bottom: 1px solid var(--border-color);
+    box-shadow: var(--shadow-sm);
+}
+
+.brand-name {
+    color: var(--text-primary);
+}
+
+.nav-link {
+    color: var(--text-secondary);
+}
+
+.nav-link:hover {
+    color: var(--text-primary);
+}
+
+/* Footer */
+.footer {
+    background-color: var(--footer-bg);
+    border-top: 1px solid var(--border-color);
+    color: var(--text-tertiary);
+}
+
+/* Cards */
+.trip-card {
+    background-color: var(--card-bg);
+    border: 1px solid var(--border-color);
+    box-shadow: var(--shadow-md);
+}
+
+.trip-card:hover {
+    box-shadow: var(--shadow-lg);
+}
+
+/* Forms */
+.form-container {
+    background-color: var(--card-bg);
+    box-shadow: var(--shadow-md);
+}
+
+.form-control {
+    background-color: var(--input-bg);
+    border: 1px solid var(--input-border);
+    color: var(--text-primary);
+}
+
+.form-control:focus {
+    border-color: #3b82f6;
+    background-color: var(--input-bg);
+}
+
+.form-control::placeholder {
+    color: var(--text-tertiary);
+}
+
+/* Labels */
+label {
+    color: var(--text-secondary);
+}
+
+/* Headings */
+h1, h2, h3, h4, h5, h6 {
+    color: var(--text-primary);
+}
+
+.subtitle {
+    color: var(--text-tertiary);
+}
+
+/* Sections */
+.trip-header-section,
+.progress-section,
+.weather-summary-section,
+.categories-section {
+    background-color: var(--card-bg);
+    border: 1px solid var(--border-color);
+    box-shadow: var(--shadow-sm);
+}
+
+/* Packing Items */
+.packing-item {
+    background-color: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+}
+
+.packing-item:hover {
+    background-color: var(--bg-tertiary);
+}
+
+/* Modals */
+.modal {
+    background-color: var(--modal-overlay);
+}
+
+.modal-content {
+    background-color: var(--modal-bg);
+    color: var(--text-primary);
+    box-shadow: var(--shadow-lg);
+}
+
+.modal-header {
+    border-bottom: 1px solid var(--border-color);
+}
+
+.close-btn {
+    color: var(--text-tertiary);
+}
+
+.close-btn:hover {
+    color: var(--text-primary);
+}
+
+/* Empty State */
+.empty-state {
+    color: var(--text-secondary);
+}
+
+.empty-icon {
+    color: var(--text-tertiary);
+}
+
+/* Progress Bar */
+.progress-bar {
+    background-color: var(--bg-tertiary);
+}
+
+/* Weather Summary */
+.weather-summary {
+    background-color: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+}
+
+/* Weather Summary Section - Override gradient for dark mode */
+body.dark-mode .weather-summary-section {
+    background: linear-gradient(135deg, #1e3a5f 0%, #2d5a7b 100%);
+    border-color: #3b82f6;
+    box-shadow: 0 2px 8px rgba(59, 130, 246, 0.2);
+}
+
+body.dark-mode .weather-text {
+    background: var(--bg-tertiary);
+    color: var(--text-secondary);
+    border-left-color: #60a5fa;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+}
+
+/* Tables */
+table {
+    background-color: var(--card-bg);
+    border-color: var(--border-color);
+}
+
+th {
+    background-color: var(--bg-tertiary);
+    color: var(--text-primary);
+}
+
+td {
+    border-color: var(--border-color);
+    color: var(--text-secondary);
+}
+
+/* Dark Mode Toggle Button */
+.dark-mode-toggle {
+    background: none;
+    border: 2px solid var(--border-color);
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+    padding: 0;
+    margin-left: 12px;
+    position: relative;
+}
+
+.dark-mode-toggle:hover {
+    border-color: var(--border-color-hover);
+    transform: scale(1.05);
+}
+
+.toggle-icon {
+    font-size: 20px;
+    position: absolute;
+    transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+.light-icon {
+    opacity: 1;
+    transform: rotate(0deg);
+}
+
+.dark-icon {
+    opacity: 0;
+    transform: rotate(180deg);
+}
+
+body.dark-mode .light-icon {
+    opacity: 0;
+    transform: rotate(180deg);
+}
+
+body.dark-mode .dark-icon {
+    opacity: 1;
+    transform: rotate(0deg);
+}
+
+/* Select Dropdowns */
+select.form-control {
+    background-color: var(--input-bg);
+    color: var(--text-primary);
+}
+
+select.form-control option {
+    background-color: var(--input-bg);
+    color: var(--text-primary);
+}
+
+/* Textarea */
+textarea.form-control {
+    background-color: var(--input-bg);
+    color: var(--text-primary);
+}
+
+/* Category Headers */
+.category-header {
+    color: var(--text-primary);
+    background-color: var(--bg-tertiary);
+}
+
+/* Meta Items */
+.meta-item {
+    color: var(--text-secondary);
+}
+
+/* Trip Meta */
+.trip-meta {
+    color: var(--text-secondary);
+}
+
+/* Progress Text */
+.progress-text {
+    color: var(--text-secondary);
+}
+
+/* Stats */
+.stat {
+    color: var(--text-secondary);
+}
+
+/* Form Notes */
+.form-note {
+    color: var(--text-tertiary);
+}
+
+/* Checkbox Labels */
+.checkbox-text {
+    color: var(--text-secondary);
+}
+
+.checkbox-description {
+    color: var(--text-tertiary);
+}
+
+/* Checkbox hover in dark mode */
+body.dark-mode .checkbox-label:hover {
+    background: var(--bg-tertiary);
+    border-color: #3b82f6;
+}
+
+/* Special styling for dark mode improvements */
+body.dark-mode .btn-secondary {
+    background-color: #374151;
+    color: #d1d5db;
+}
+
+body.dark-mode .btn-secondary:hover {
+    background-color: #4b5563;
+}
+
+body.dark-mode .trip-badge {
+    border-color: var(--border-color);
+}
+
+/* Ensure proper contrast for links */
+body.dark-mode a {
+    color: #60a5fa;
+}
+
+body.dark-mode a:hover {
+    color: #93c5fd;
+}
+
+/* Button links should maintain their button colors */
+body.dark-mode a.btn-primary,
+body.dark-mode a.btn-secondary,
+body.dark-mode a.btn-danger {
+    color: white;
+}
+
+body.dark-mode a.btn-primary:hover,
+body.dark-mode a.btn-secondary:hover,
+body.dark-mode a.btn-danger:hover {
+    color: white;
+}
+
+/* Buttons maintain their brand colors but adjust for dark mode */
+body.dark-mode .btn-primary {
+    background-color: #2563eb;
+}
+
+body.dark-mode .btn-primary:hover {
+    background-color: #1d4ed8;
+}
+
+body.dark-mode .btn-danger {
+    background-color: #dc2626;
+}
+
+body.dark-mode .btn-danger:hover {
+    background-color: #b91c1c;
+}
+
+/* Page Header */
+.page-header {
+    color: var(--text-primary);
+}
+
+/* Section Headers */
+.section-header h2 {
+    color: var(--text-primary);
+}
+
+.section-header p {
+    color: var(--text-tertiary);
+}
+
+/* Traveler Input Styles */
+body.dark-mode .traveler-select {
+    background-color: var(--input-bg);
+    color: var(--text-primary);
+    border-color: var(--input-border);
+}
+
+/* Remove Button Dark Mode */
+body.dark-mode .btn-remove {
+    background-color: #7f1d1d;
+    color: #fecaca;
+}
+
+body.dark-mode .btn-remove:hover {
+    background-color: #991b1b;
+}
+
+/* Smooth transitions for theme changes */
+* {
+    transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+}
+
+/* Prevent transition on buttons for better UX */
+button, .btn {
+    transition: background-color 0.2s ease, transform 0.1s ease, box-shadow 0.2s ease;
+}
