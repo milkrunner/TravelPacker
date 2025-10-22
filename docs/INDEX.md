@@ -22,7 +22,6 @@ docs/
 
 ### Quick Start
 - **[Quick Start Guide](getting-started/quick-start.md)** - Fast setup and usage guide
-- **[Authentication Setup](getting-started/authentication.md)** - User authentication quick start
 
 ---
 
@@ -52,9 +51,8 @@ docs/
 
 ## 🔒 Security
 
-### Security Features (6 Layers)
+### Security Features
 - **[Security Overview](security/overview.md)** - Complete security architecture
-- **[Authentication](security/authentication.md)** - User authentication system
 - **[CSRF Protection](security/csrf-protection.md)** - Cross-site request forgery prevention
 - **[Content Sanitization](security/content-sanitization.md)** - XSS attack prevention
 - **[CSP Reporting](security/csp-reporting.md)** - Content Security Policy monitoring
@@ -73,7 +71,6 @@ docs/
 ## 🔧 Implementation Guides
 
 ### Setup & Configuration
-- **[Authentication Setup](implementation/authentication-setup.md)** - Complete auth implementation
 - **[CSRF Implementation](implementation/csrf-implementation.md)** - CSRF protection setup
 - **[Sanitization Implementation](implementation/sanitization-implementation.md)** - Content sanitization setup
 - **[CSP Implementation](implementation/csp-implementation.md)** - CSP configuration
@@ -109,9 +106,9 @@ docs/
 
 ### For New Users
 1. [Quick Start](getting-started/quick-start.md)
-2. [Authentication Setup](getting-started/authentication.md)
-3. [AI Suggestions](features/ai-suggestions.md)
-4. [Templates](features/templates.md)
+2. [AI Suggestions](features/ai-suggestions.md)
+3. [Templates](features/templates.md)
+4. [Dark Mode](features/dark-mode.md)
 
 ### For Developers
 1. [Database Design](architecture/database-design.md)
@@ -127,12 +124,11 @@ docs/
 
 ### For Security Auditors
 1. [Security Overview](security/overview.md)
-2. [Authentication](security/authentication.md)
-3. [CSRF Protection](security/csrf-protection.md)
-4. [Content Sanitization](security/content-sanitization.md)
-5. [CSP Reporting](security/csp-reporting.md)
-6. [Rate Limiting](security/rate-limiting.md)
-7. [Vulnerability Reports](security/)
+2. [CSRF Protection](security/csrf-protection.md)
+3. [Content Sanitization](security/content-sanitization.md)
+4. [CSP Reporting](security/csp-reporting.md)
+5. [Rate Limiting](security/rate-limiting.md)
+6. [Vulnerability Reports](security/)
 
 ---
 
@@ -168,7 +164,10 @@ docs/
 - ✅ Audit Logging (Security Tracking)
 - ✅ CSP Reporting (Attack Monitoring)
 - ✅ Repository Restructure (Better Organization)
+- ✅ Authentication System Removed (Simplified for future implementation)
+- ✅ Dark Mode Enhancements (Complete UI coverage)
+- ✅ Improved Date Formatting (Human-readable dates)
 
 ---
 
-*Last Updated: October 21, 2025*
+**Last Updated: October 22, 2025**

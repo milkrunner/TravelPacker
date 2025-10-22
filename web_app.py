@@ -7,7 +7,6 @@ import os
 
 from flask import Flask, render_template, request, jsonify, redirect, url_for, send_file, flash
 from flask_wtf.csrf import CSRFProtect
-from flask_login import LoginManager, login_user, logout_user, login_required, current_user
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
 from flask_talisman import Talisman
@@ -21,8 +20,7 @@ from src.services.pdf_service import PDFService
 from src.models.trip import TravelStyle, TransportMethod
 from src.database import init_db
 from src.validators import (
-    TripCreateRequest, ItemCreateRequest, ItemToggleRequest,
-    UserRegistrationRequest, UserLoginRequest
+    TripCreateRequest, ItemCreateRequest, ItemToggleRequest
 )
 from src.services.audit_service import AuditLogger
 from src.services.sanitization_service import ContentSanitizer
@@ -112,12 +110,6 @@ Talisman(
 )
 print(f"✅ Security headers enabled (HTTPS redirect: {force_https})")
 
-# Setup login manager
-login_manager = LoginManager()
-login_manager.init_app(app)
-login_manager.login_view = 'login'
-login_manager.login_message = 'Please log in to access this page.'
-
 # Initialize database
 init_db()
 
@@ -127,160 +119,16 @@ trip_service = TripService(use_database=True)
 packing_service = PackingListService(ai_service, use_database=True)
 
 
-@login_manager.user_loader
-def load_user(user_id):
-    """Load user by ID for Flask-Login"""
-    from src.database.repository import UserRepository
-    return UserRepository.get(user_id)
-
-
-@app.route('/register', methods=['GET', 'POST'])
-@limiter.limit("5 per hour")
-def register():
-    """User registration with input validation"""
-    if current_user.is_authenticated:
-        return redirect(url_for('index'))
-    
-    if request.method == 'POST':
-        from src.database.repository import UserRepository
-        
-        try:
-            # Sanitize and validate input
-            raw_username = ContentSanitizer.sanitize_strict(request.form.get('username', ''))
-            raw_email = ContentSanitizer.sanitize_email(request.form.get('email', ''))
-            
-            # Validate input using Pydantic
-            validated_data = UserRegistrationRequest(
-                username=raw_username,
-                email=raw_email,
-                password=request.form.get('password', '')
-            )
-            
-            confirm_password = request.form.get('confirm_password', '')
-            
-            # Check password confirmation
-            if validated_data.password != confirm_password:
-                flash('Passwords do not match', 'error')
-                return render_template('register.html')
-            
-            # Check if username exists
-            if UserRepository.get_by_username(validated_data.username):
-                flash('Username already taken', 'error')
-                return render_template('register.html')
-            
-            # Check if email exists
-            if UserRepository.get_by_email(validated_data.email):
-                flash('Email already registered', 'error')
-                return render_template('register.html')
-            
-            # Create user with validated data
-            user = UserRepository.create(
-                validated_data.username,
-                validated_data.email,
-                validated_data.password
-            )
-            if user:
-                # Audit log registration
-                AuditLogger.log_register(
-                    user_id=user.id,
-                    username=user.username,
-                    email=user.email
-                )
-                login_user(user)
-                flash('Account created successfully! Welcome to NikNotes!', 'success')
-                return redirect(url_for('index'))
-            else:
-                flash('Error creating account. Please try again.', 'error')
-                
-        except ValidationError as e:
-            # Extract and display validation errors
-            for error in e.errors():
-                field = error['loc'][0] if error['loc'] else 'input'
-                message = error['msg']
-                flash(f'{field.capitalize()}: {message}', 'error')
-            return render_template('register.html')
-            return redirect(url_for('index'))
-        else:
-            flash('Error creating account. Please try again.', 'error')
-    
-    return render_template('register.html')
-
-
-@app.route('/login', methods=['GET', 'POST'])
-@limiter.limit("10 per hour")
-def login():
-    """User login"""
-    if current_user.is_authenticated:
-        return redirect(url_for('index'))
-    
-    if request.method == 'POST':
-        from src.database.repository import UserRepository
-        
-        username = request.form.get('username', '').strip()
-        password = request.form.get('password', '')
-        remember = request.form.get('remember', False)
-        
-        if not username or not password:
-            flash('Username and password are required', 'error')
-            return render_template('login.html')
-        
-        # Get user
-        user = UserRepository.get_by_username(username)
-        
-        if user and user.check_password(password):
-            # Update last login
-            UserRepository.update_last_login(user.id)
-            # Audit log successful login
-            AuditLogger.log_login_success(
-                user_id=user.id,
-                username=user.username,
-                remember=remember
-            )
-            login_user(user, remember=remember)
-            flash(f'Welcome back, {user.username}!', 'success')
-            
-            # Redirect to next page or index
-            next_page = request.args.get('next')
-            if next_page:
-                return redirect(next_page)
-            return redirect(url_for('index'))
-        else:
-            # Audit log failed login
-            AuditLogger.log_login_failed(
-                username=username,
-                reason='Invalid username or password'
-            )
-            flash('Invalid username or password', 'error')
-    
-    return render_template('login.html')
-
-
-@app.route('/logout', methods=['POST'])
-@login_required
-def logout():
-    """User logout"""
-    # Audit log logout
-    AuditLogger.log_logout(
-        user_id=current_user.id,
-        username=current_user.username
-    )
-    logout_user()
-    flash('You have been logged out', 'success')
-    return redirect(url_for('login'))
-
-
 @app.route('/')
-@login_required
 def index():
     """Home page - list all trips and templates"""
-    all_trips = trip_service.list_trips(user_id=current_user.id)
+    all_trips = trip_service.list_trips()
     trips = [t for t in all_trips if not t.is_template]
     templates = [t for t in all_trips if t.is_template]
     return render_template('index.html', trips=trips, templates=templates)
 
 
 @app.route('/trip/new', methods=['GET', 'POST'])
-@login_required
 @limiter.limit("20 per hour")
 def new_trip():
     """Create a new trip"""
@@ -310,7 +158,7 @@ def new_trip():
             start_date=data.get('start_date'),
             end_date=data.get('end_date'),
             travelers=sanitized_travelers,
-            user_id=current_user.id,
+            user_id=None,
             travel_style=data.get('travel_style', 'leisure'),
             transportation=data.get('transportation', 'flight'),
             activities=sanitized_activities,
@@ -340,14 +188,6 @@ def new_trip():
                     ai_suggested=True
                 )
         
-        # Audit log trip creation
-        AuditLogger.log_trip_create(
-            trip_id=trip.id,
-            destination=trip.destination,
-            user_id=current_user.id,
-            username=current_user.username
-        )
-        
         return redirect(url_for('view_trip', trip_id=trip.id))
     
     # GET request - show form
@@ -362,12 +202,11 @@ def new_trip():
 
 
 @app.route('/trip/<trip_id>')
-@login_required
 def view_trip(trip_id):
     """View trip details and packing list"""
-    trip = trip_service.get_trip(trip_id, user_id=current_user.id)
+    trip = trip_service.get_trip(trip_id)
     if not trip:
-        flash('Trip not found or you do not have permission to view it', 'error')
+        flash('Trip not found', 'error')
         return redirect(url_for('index'))
     
     items = packing_service.get_items_for_trip(trip_id)
@@ -381,20 +220,26 @@ def view_trip(trip_id):
             items_by_category[category] = []
         items_by_category[category].append(item)
     
+    # Format dates for display
+    from datetime import datetime
+    start_date_formatted = datetime.strptime(trip.start_date, '%Y-%m-%d').strftime('%B %d')
+    end_date_formatted = datetime.strptime(trip.end_date, '%Y-%m-%d').strftime('%B %d, %Y')
+    
     return render_template(
         'view_trip.html',
         trip=trip,
         items=items,
         items_by_category=items_by_category,
-        progress=progress
+        progress=progress,
+        start_date_formatted=start_date_formatted,
+        end_date_formatted=end_date_formatted
     )
 
 
 @app.route('/trip/<trip_id>/export-pdf')
-@login_required
 def export_trip_pdf(trip_id):
     """Export trip packing list as PDF"""
-    trip = trip_service.get_trip(trip_id, user_id=current_user.id)
+    trip = trip_service.get_trip(trip_id)
     if not trip:
         flash('Trip not found or access denied', 'error')
         return redirect(url_for('index'))
@@ -404,14 +249,6 @@ def export_trip_pdf(trip_id):
     
     # Generate PDF
     pdf_buffer = PDFService.generate_packing_list_pdf(trip, items, progress)
-    
-    # Audit log PDF export
-    AuditLogger.log_pdf_export(
-        trip_id=trip_id,
-        destination=trip.destination,
-        user_id=current_user.id,
-        username=current_user.username
-    )
     
     # Create safe filename
     safe_destination = "".join(c for c in trip.destination if c.isalnum() or c in (' ', '-', '_')).strip()
@@ -426,11 +263,9 @@ def export_trip_pdf(trip_id):
 
 
 @app.route('/trip/<trip_id>/save-as-template', methods=['POST'])
-@login_required
 def save_as_template(trip_id):
     """Save a trip as a template"""
-    # Verify ownership
-    trip = trip_service.get_trip(trip_id, user_id=current_user.id)
+    trip = trip_service.get_trip(trip_id)
     if not trip:
         flash('Trip not found or access denied', 'error')
         return redirect(url_for('index'))
@@ -452,10 +287,9 @@ def save_as_template(trip_id):
 
 
 @app.route('/trip/from-template/<template_id>', methods=['GET', 'POST'])
-@login_required
 def create_from_template(template_id):
     """Create a new trip from a template"""
-    template = trip_service.get_trip(template_id, user_id=current_user.id)
+    template = trip_service.get_trip(template_id)
     if not template or not template.is_template:
         flash('Template not found or access denied', 'error')
         return redirect(url_for('index'))
@@ -478,7 +312,7 @@ def create_from_template(template_id):
             start_date=data.get('start_date'),
             end_date=data.get('end_date'),
             travelers=sanitized_travelers,
-            user_id=current_user.id,
+            user_id=None,
             travel_style=template.travel_style.value,
             transportation=template.transportation.value,
             activities=template.activities,
@@ -510,27 +344,13 @@ def create_from_template(template_id):
 
 
 @app.route('/trip/<trip_id>/delete', methods=['POST'])
-@login_required
 @limiter.limit("20 per hour")
 def delete_trip(trip_id):
     """Delete a trip"""
     try:
-        # Get trip details before deletion for audit log
-        trip = trip_service.get_trip(trip_id, user_id=current_user.id)
-        if not trip:
-            return "Trip not found", 404
-        
-        destination = trip.destination
         success = trip_service.delete_trip(trip_id)
         
         if success:
-            # Audit log trip deletion
-            AuditLogger.log_trip_delete(
-                trip_id=trip_id,
-                destination=destination,
-                user_id=current_user.id,
-                username=current_user.username
-            )
             return redirect(url_for('index'))
         else:
             return "Trip not found", 404
@@ -540,11 +360,10 @@ def delete_trip(trip_id):
 
 
 @app.route('/api/item/<item_id>/toggle', methods=['POST'])
-@login_required
 @limiter.limit("100 per hour")
 def toggle_item(item_id):
     """Toggle item packed status"""
-    data = request.json
+    data = request.get_json() or {}
     is_packed = data.get('is_packed', False)
     
     item = packing_service.mark_item_packed(item_id, is_packed)
@@ -560,11 +379,10 @@ def toggle_item(item_id):
 
 
 @app.route('/api/trip/<trip_id>/item', methods=['POST'])
-@login_required
 @limiter.limit("50 per hour")
 def add_item(trip_id):
     """Add a new item to the packing list"""
-    data = request.json
+    data = request.get_json() or {}
     
     # Sanitize item data
     sanitized_name = ContentSanitizer.sanitize_strict(data.get('name', ''))
@@ -594,7 +412,6 @@ def add_item(trip_id):
 
 
 @app.route('/api/item/<item_id>', methods=['DELETE'])
-@login_required
 @limiter.limit("100 per hour")
 def delete_item(item_id):
     """Delete a packing item"""
@@ -609,7 +426,7 @@ def delete_item(item_id):
 @app.route('/api/trip/<trip_id>/reorder-items', methods=['POST'])
 def reorder_items(trip_id):
     """Update the display order of packing items"""
-    data = request.json
+    data = request.get_json() or {}
     items = data.get('items', [])
     
     # Update each item's display_order
@@ -621,13 +438,8 @@ def reorder_items(trip_id):
 
 
 @app.route('/api/trip/<trip_id>/regenerate', methods=['POST'])
-@login_required
 def regenerate_suggestions(trip_id):
     """Regenerate AI suggestions for a trip"""
-    # Verify ownership
-    trip = trip_service.get_trip(trip_id, user_id=current_user.id)
-    if not trip:
-        return jsonify({'error': 'Access denied'}), 403
     trip = trip_service.get_trip(trip_id)
     if not trip:
         return jsonify({'success': False, 'error': 'Trip not found'}), 404

@@ -20,7 +20,7 @@ class TripService:
         start_date: str,
         end_date: str,
         travelers: List[str],
-        user_id: str,
+        user_id: Optional[str] = None,
         travel_style: str = "leisure",
         transportation: str = "flight",
         activities: Optional[List[str]] = None,
@@ -39,7 +39,7 @@ class TripService:
         )
         
         if self.use_database:
-            return TripRepository.create(trip, user_id)
+            return TripRepository.create(trip, user_id or "default_user")
         else:
             # In-memory fallback
             trip_id = f"trip_{len(self.trips) + 1}"

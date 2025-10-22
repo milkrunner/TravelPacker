@@ -6,7 +6,7 @@ endblock %} {% block content %}
       <h1>{{ trip.destination }}</h1>
       <div class="trip-meta">
         <span class="meta-item"
-          >📅 {{ trip.start_date }} to {{ trip.end_date }}</span
+          >📅 {{ start_date_formatted }} to {{ end_date_formatted }}</span
         >
         <span class="meta-item">⏱️ {{ trip.duration }} days</span>
         <span class="meta-item">👥 {{ trip.travelers|length }} travelers</span>
@@ -49,37 +49,39 @@ endblock %} {% block content %}
     </div>
   </div>
 
-  <div class="progress-section">
-    <div class="progress-header">
-      <h2>📦 Packing Progress</h2>
-      <div class="progress-stats">
-        <span class="stat packed">✓ {{ progress.packed_items }} packed</span>
-        <span class="stat unpacked"
-          >○ {{ progress.unpacked_items }} remaining</span
-        >
+  <div class="info-grid">
+    <div class="progress-section">
+      <div class="progress-header">
+        <h2>📦 Packing Progress</h2>
+        <div class="progress-stats">
+          <span class="stat packed">✓ {{ progress.packed_items }} packed</span>
+          <span class="stat unpacked"
+            >○ {{ progress.unpacked_items }} remaining</span
+          >
+        </div>
+      </div>
+      <div class="progress-bar">
+        <div
+          class="progress-fill"
+          style="width: {{ progress.completion_percentage }}%"
+        ></div>
+      </div>
+      <p class="progress-text">
+        {{ "%.0f"|format(progress.completion_percentage) }}% Complete
+      </p>
+    </div>
+
+    {% if trip.weather_conditions %}
+    <div class="weather-summary-section">
+      <div class="section-header">
+        <h2>🌤️ Weather & AI Analysis</h2>
+      </div>
+      <div class="weather-content">
+        <p class="weather-text">{{ trip.weather_conditions }}</p>
       </div>
     </div>
-    <div class="progress-bar">
-      <div
-        class="progress-fill"
-        style="width: {{ progress.completion_percentage }}%"
-      ></div>
-    </div>
-    <p class="progress-text">
-      {{ "%.0f"|format(progress.completion_percentage) }}% Complete
-    </p>
+    {% endif %}
   </div>
-
-  {% if trip.weather_conditions %}
-  <div class="weather-summary-section">
-    <div class="section-header">
-      <h2>🌤️ Weather & AI Analysis</h2>
-    </div>
-    <div class="weather-content">
-      <p class="weather-text">{{ trip.weather_conditions }}</p>
-    </div>
-  </div>
-  {% endif %}
 
   <div class="packing-list-section">
     <div class="section-header">
@@ -310,7 +312,7 @@ endblock %} {% block content %}
   </div>
 </div>
 {% endblock %} {% block extra_js %}
-<script>
+<script nonce="{{ csp_nonce() }}">
   const tripId = "{{ trip.id }}";
   let draggedElement = null;
 

@@ -101,17 +101,16 @@ See [DARK_MODE.md](docs/DARK_MODE.md) for detailed dark mode documentation.
 
 **Production-Ready Security**:
 
-- ✅ **Authentication & Authorization**: Flask-Login user system with password hashing
 - ✅ **CSRF Protection**: Flask-WTF protection on all state-changing operations
+- ✅ **Content Security Policy**: Talisman with nonce-based inline script protection
 - ✅ **Rate Limiting**: Flask-Limiter prevents brute force and abuse
+- ✅ **Input Sanitization**: Bleach XSS protection for user-generated content
 - ✅ **Secure Credentials**: Environment variables for all secrets
 - ✅ **Container Security**: Non-root user execution in Docker
 - ✅ **Database Security**: Localhost-only binding, no exposed ports
 
 #### Rate Limits
 
-- Login: 10 attempts/hour
-- Registration: 5 accounts/hour
 - API requests: 50-100/hour
 - General browsing: 50/hour, 200/day
 
@@ -184,7 +183,6 @@ Complete documentation is available in the [`docs/`](docs/) folder:
 ### Getting Started Guides
 
 - **[Quick Start](docs/getting-started/quick-start.md)** - Fast setup guide
-- **[Authentication](docs/getting-started/authentication.md)** - User accounts setup
 
 ### Feature Documentation
 
@@ -193,6 +191,7 @@ Complete documentation is available in the [`docs/`](docs/) folder:
 - **[Weather Integration](docs/features/weather-integration.md)** - Weather-based suggestions
 - **[PDF Export](docs/features/pdf-export.md)** - Export packing lists
 - **[Templates](docs/features/templates.md)** - Save and reuse trips
+- **[Dark Mode](docs/features/dark-mode.md)** - Theme customization
 
 ### Architecture
 
@@ -203,8 +202,8 @@ Complete documentation is available in the [`docs/`](docs/) folder:
 ### Security
 
 - **[Security Overview](docs/security/overview.md)** - Complete security guide
-- **[Authentication](docs/security/authentication.md)** - User authentication
 - **[CSRF Protection](docs/security/csrf-protection.md)** - Cross-site request forgery
+- **[Content Security Policy](docs/security/csp-protection.md)** - CSP implementation
 - **[Content Sanitization](docs/security/content-sanitization.md)** - XSS prevention
 - **[Rate Limiting](docs/security/rate-limiting.md)** - API protection
 

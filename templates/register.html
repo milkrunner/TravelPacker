@@ -92,7 +92,7 @@
     </div>
 </div>
 
-<script>
+<script nonce="{{ csp_nonce() }}">
     // Client-side password confirmation validation
     document.querySelector('form').addEventListener('submit', function(e) {
         const password = document.getElementById('password').value;

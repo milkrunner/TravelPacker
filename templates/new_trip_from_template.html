@@ -150,19 +150,20 @@ block content %}
   </div>
 </div>
 {% endblock %} {% block extra_js %}
-<script>
-  // Set minimum date to today
-  const today = new Date().toISOString().split("T")[0];
-  document.getElementById("start_date").setAttribute("min", today);
-  // Update end date minimum when start date changes
-  document.getElementById("start_date").addEventListener("change", function () {
-    document.getElementById("end_date").setAttribute("min", this.value);
-  });
+<script nonce="{{ csp_nonce() }}">
+  document.addEventListener("DOMContentLoaded", function() {
+    // Set minimum date to today
+    const today = new Date().toISOString().split("T")[0];
+    document.getElementById("start_date").setAttribute("min", today);
+    // Update end date minimum when start date changes
+    document.getElementById("start_date").addEventListener("change", function () {
+      document.getElementById("end_date").setAttribute("min", this.value);
+    });
 
-  // Dynamic traveler list
-  document
-    .getElementById("add-traveler")
-    .addEventListener("click", function () {
+    // Dynamic traveler list
+    document
+      .getElementById("add-traveler")
+      .addEventListener("click", function () {
       const list = document.getElementById("traveler-list");
       const row = document.createElement("div");
       row.className = "traveler-row";
@@ -205,17 +206,19 @@ block content %}
       updateRemoveButtons();
     });
 
-  function updateRemoveButtons() {
-    const rows = document.querySelectorAll(".traveler-row");
-    rows.forEach((row, idx) => {
-      const btn = row.querySelector(".btn-remove");
-      btn.style.display = rows.length > 1 ? "" : "none";
-      btn.onclick = function () {
-        row.remove();
-        updateRemoveButtons();
-      };
-    });
-  }
-  updateRemoveButtons();
+    function updateRemoveButtons() {
+      const rows = document.querySelectorAll(".traveler-row");
+      rows.forEach((row, idx) => {
+        const btn = row.querySelector(".btn-remove");
+        btn.style.display = rows.length > 1 ? "" : "none";
+        btn.onclick = function () {
+          row.remove();
+          updateRemoveButtons();
+        };
+      });
+    }
+    
+    updateRemoveButtons();
+  });
 </script>
 {% endblock %}

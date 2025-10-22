@@ -1,7 +1,9 @@
 # Security Audit Report - NikNotes v1.0.0
 
-**Date:** October 20, 2025  
+**Date:** October 20, 2025 (Updated: October 22, 2025)  
 **Auditor:** GitHub Copilot Security Analysis
+
+> **⚠️ Update October 22, 2025:** Authentication system has been removed to allow for future custom implementation. The application currently operates without user authentication. Core security features (CSRF, CSP, rate limiting, input sanitization) remain active.
 
 ## Executive Summary
 

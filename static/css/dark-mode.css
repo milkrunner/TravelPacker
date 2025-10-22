@@ -312,12 +312,21 @@ textarea.form-control {
     color: var(--text-tertiary);
 }
 
-/* Checkbox Labels */
-.checkbox-text {
+/* Checkbox Labels and Container Dark Mode */
+body.dark-mode .checkbox-label {
+    background: var(--bg-secondary);
+    border-color: var(--border-color);
+}
+
+body.dark-mode .checkbox-text {
     color: var(--text-secondary);
 }
 
-.checkbox-description {
+body.dark-mode .checkbox-text strong {
+    color: var(--text-primary);
+}
+
+body.dark-mode .checkbox-description {
     color: var(--text-tertiary);
 }
 
@@ -325,6 +334,13 @@ textarea.form-control {
 body.dark-mode .checkbox-label:hover {
     background: var(--bg-tertiary);
     border-color: #3b82f6;
+}
+
+/* Checkbox input styling for dark mode */
+body.dark-mode .form-checkbox {
+    accent-color: #3b82f6;
+    background-color: var(--input-bg);
+    border: 1px solid var(--input-border);
 }
 
 /* Special styling for dark mode improvements */
@@ -394,21 +410,94 @@ body.dark-mode .btn-danger:hover {
     color: var(--text-tertiary);
 }
 
-/* Traveler Input Styles */
+/* Traveler Section Dark Mode Styles */
+body.dark-mode .traveler-row {
+    background: linear-gradient(135deg, #1f2937 0%, #374151 100%);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+}
+
+body.dark-mode .traveler-row:hover {
+    background: linear-gradient(135deg, #374151 0%, #4b5563 100%);
+    box-shadow: 0 4px 12px rgba(59,130,246,0.3);
+}
+
 body.dark-mode .traveler-select {
-    background-color: var(--input-bg);
+    background: linear-gradient(to bottom, #374151, #4b5563);
+    background-image: 
+        url('data:image/svg+xml;utf8,<svg fill="%2360a5fa" height="20" viewBox="0 0 20 20" width="20" xmlns="http://www.w3.org/2000/svg"><path d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"/></svg>'),
+        linear-gradient(to bottom, #374151, #4b5563);
+    background-repeat: no-repeat, repeat;
+    background-position: right 1rem center, 0 0;
+    background-size: 1.5em 1.5em, 100% 100%;
     color: var(--text-primary);
-    border-color: var(--input-border);
+    border-color: #4b5563;
+    box-shadow: 
+        0 1px 3px rgba(0,0,0,0.3),
+        inset 0 1px 2px rgba(255,255,255,0.05);
+}
+
+body.dark-mode .traveler-select:hover {
+    background: linear-gradient(to bottom, #4b5563, #6b7280);
+    background-image: 
+        url('data:image/svg+xml;utf8,<svg fill="%2360a5fa" height="20" viewBox="0 0 20 20" width="20" xmlns="http://www.w3.org/2000/svg"><path d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"/></svg>'),
+        linear-gradient(to bottom, #4b5563, #6b7280);
+    background-repeat: no-repeat, repeat;
+    background-position: right 1rem center, 0 0;
+    background-size: 1.5em 1.5em, 100% 100%;
+    border-color: #60a5fa;
+    box-shadow: 
+        0 2px 6px rgba(59,130,246,0.3),
+        inset 0 1px 2px rgba(255,255,255,0.05);
+}
+
+body.dark-mode .traveler-select:focus {
+    background: #4b5563;
+    border-color: #60a5fa;
+    box-shadow: 
+        0 0 0 3px rgba(59,130,246,0.2),
+        0 2px 6px rgba(59,130,246,0.3),
+        inset 0 1px 2px rgba(255,255,255,0.05);
+}
+
+body.dark-mode .traveler-select option {
+    background: #374151;
+    color: var(--text-primary);
+}
+
+body.dark-mode .traveler-select option:hover {
+    background: #4b5563;
 }
 
 /* Remove Button Dark Mode */
 body.dark-mode .btn-remove {
     background-color: #7f1d1d;
     color: #fecaca;
+    box-shadow: 0 2px 4px rgba(127,29,29,0.3);
 }
 
 body.dark-mode .btn-remove:hover {
     background-color: #991b1b;
+    box-shadow: 0 4px 8px rgba(153,27,27,0.4);
+}
+
+body.dark-mode .remove-tooltip {
+    background: #0f172a;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+}
+
+body.dark-mode .remove-tooltip::after {
+    border-top-color: #0f172a;
+}
+
+/* Add Traveler Button Dark Mode */
+body.dark-mode .btn-add-traveler {
+    background: linear-gradient(135deg, #2563eb 0%, #1e40af 100%);
+    box-shadow: 0 2px 4px rgba(37,99,235,0.3);
+}
+
+body.dark-mode .btn-add-traveler:hover {
+    background: linear-gradient(135deg, #1d4ed8 0%, #1e3a8a 100%);
+    box-shadow: 0 6px 16px rgba(37,99,235,0.4);
 }
 
 /* Smooth transitions for theme changes */

@@ -202,18 +202,16 @@ python -c "import redis; r = redis.from_url('redis://localhost:6379/0'); print(r
 
 ## 📚 Documentation
 
-- [MIGRATION_SUMMARY.md](MIGRATION_SUMMARY.md) - Complete migration overview
-- [PERFORMANCE_SETUP.md](PERFORMANCE_SETUP.md) - Detailed setup guide
-- [DATABASE.md](DATABASE.md) - Database architecture
-- [AUTHENTICATION.md](AUTHENTICATION.md) - User authentication & authorization
-- [RATE_LIMITING.md](RATE_LIMITING.md) - Rate limiting configuration
-- [CSRF_PROTECTION.md](CSRF_PROTECTION.md) - CSRF security
-- [CONTAINER_SECURITY.md](CONTAINER_SECURITY.md) - Docker security
-- [GEMINI_SETUP.md](GEMINI_SETUP.md) - AI configuration
-- [WEATHER_SETUP.md](WEATHER_SETUP.md) - Weather integration guide
-- [SMART_QUANTITIES.md](SMART_QUANTITIES.md) - Smart quantity suggestions (v0.8.0)
-- [WEB_INTERFACE.md](WEB_INTERFACE.md) - Web app guide
-- [README.md](README.md) - Main documentation
+- [Performance Guide](../architecture/performance.md) - PostgreSQL & Redis optimization
+- [Database Design](../architecture/database-design.md) - Database architecture
+- [Rate Limiting](../security/rate-limiting.md) - Rate limiting configuration
+- [CSRF Protection](../security/csrf-protection.md) - CSRF security
+- [Container Security](../security/container-security.md) - Docker security
+- [AI Suggestions](../features/ai-suggestions.md) - AI configuration
+- [Weather Integration](../features/weather-integration.md) - Weather setup
+- [Dark Mode](../features/dark-mode.md) - Theme customization
+- [Templates](../features/templates.md) - Trip templates
+- [PDF Export](../features/pdf-export.md) - Export functionality
 
 ## ⚡ Performance Expectations
 

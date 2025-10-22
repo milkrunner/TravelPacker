@@ -385,19 +385,30 @@ body {
 }
 
 .trip-info h1 {
-    font-size: 2rem;
-    margin-bottom: 1rem;
+    font-size: 2.5rem;
+    margin-bottom: 1.25rem;
+    font-weight: 700;
 }
 
 .trip-meta {
     display: flex;
     flex-wrap: wrap;
-    gap: 1rem;
+    gap: 1.25rem;
+    align-items: center;
 }
 
 .meta-item {
     color: var(--text-secondary);
-    font-size: 0.9rem;
+    font-size: 0.95rem;
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+}
+
+.meta-item:first-child {
+    font-size: 1.05rem;
+    font-weight: 600;
+    color: var(--text-primary);
 }
 
 .trip-actions {
@@ -427,6 +438,20 @@ body {
 
 .trip-actions .btn-danger {
     color: white;
+}
+
+/* Info Grid - Horizontal Layout */
+.info-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2rem;
+    margin-bottom: 2rem;
+}
+
+@media (max-width: 968px) {
+    .info-grid {
+        grid-template-columns: 1fr;
+    }
 }
 
 /* Progress Section */
