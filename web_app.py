@@ -51,7 +51,7 @@ csrf = CSRFProtect(app)
 # Initialize Flask-Login
 login_manager = LoginManager()
 login_manager.init_app(app)
-login_manager.login_view = 'login'
+login_manager.login_view = 'login'  # type: ignore
 login_manager.login_message = 'Please log in to access this page.'
 login_manager.login_message_category = 'info'
 
@@ -182,10 +182,16 @@ def new_trip():
             for activity in raw_activities if activity.strip()
         ]
         
+        start_date = data.get('start_date', '')
+        end_date = data.get('end_date', '')
+        if not start_date or not end_date:
+            flash('Start date and end date are required', 'error')
+            return redirect(url_for('new_trip'))
+        
         trip = trip_service.create_trip(
             destination=sanitized_destination,
-            start_date=data.get('start_date'),
-            end_date=data.get('end_date'),
+            start_date=start_date,
+            end_date=end_date,
             travelers=sanitized_travelers,
             user_id=current_user.id,
             travel_style=data.get('travel_style', 'leisure'),
@@ -196,7 +202,7 @@ def new_trip():
         
         # Generate AI suggestions only if requested
         use_ai = data.get('use_ai_suggestions') == 'on'
-        if use_ai:
+        if use_ai and trip.id:
             suggestions = packing_service.generate_suggestions(trip)
             
             # Persist weather data if it was fetched
@@ -336,12 +342,18 @@ def create_from_template(template_id):
         ]
         
         # Create new trip with template data but new dates
+        start_date = data.get('start_date', '')
+        end_date = data.get('end_date', '')
+        if not start_date or not end_date:
+            flash('Start date and end date are required', 'error')
+            return redirect(url_for('create_from_template', template_id=template_id))
+        
         new_trip = trip_service.create_trip(
             destination=sanitized_destination,
-            start_date=data.get('start_date'),
-            end_date=data.get('end_date'),
+            start_date=start_date,
+            end_date=end_date,
             travelers=sanitized_travelers,
-            user_id=None,
+            user_id=current_user.id,
             travel_style=template.travel_style.value,
             transportation=template.transportation.value,
             activities=template.activities,
@@ -349,20 +361,19 @@ def create_from_template(template_id):
         )
         
         # Copy packing items from template
-        template_items = packing_service.get_items_for_trip(template_id)
-        for item in template_items:
-            packing_service.create_item(
-                trip_id=new_trip.id,
-                name=item.name,
-                category=item.category.value,
-                quantity=item.quantity,
-                is_essential=item.is_essential,
-                notes=item.notes
-            )
+        if new_trip.id:
+            template_items = packing_service.get_items_for_trip(template_id)
+            for item in template_items:
+                    packing_service.create_item(
+                        trip_id=new_trip.id,
+                    name=item.name,
+                    category=item.category.value,
+                    quantity=item.quantity,
+                    is_essential=item.is_essential,
+                    notes=item.notes
+                )
         
-        return redirect(url_for('view_trip', trip_id=new_trip.id))
-    
-    # GET: show form pre-filled with template data
+        return redirect(url_for('view_trip', trip_id=new_trip.id))    # GET: show form pre-filled with template data
     travel_styles = [style.value for style in TravelStyle]
     transport_methods = [method.value for method in TransportMethod]
     
@@ -699,7 +710,7 @@ def login():
 
 
 @app.route('/auth/google', methods=['POST'])
-@csrf.exempt  # Google Sign-In sends POST from client-side
+@csrf.exempt  # Google Sign-In sends POST from client-side; cryptographic JWT token verification provides equivalent CSRF protection
 def google_signin():
     """Verify Google Sign-In token and log user in"""
     if not google_signin_service.enabled:
@@ -758,14 +769,8 @@ def logout():
     
     logout_user()
     
-    # Audit log
-    AuditLogger.log_event(
-        event_type='user_logout',
-        user_id=user_id,
-        details=f'User logged out: {username}',
-        ip_address=request.remote_addr,
-        user_agent=request.headers.get('User-Agent', 'unknown')
-    )
+    # Log logout for security audit
+    print(f'User logout: {username} (ID: {user_id}) from IP: {request.remote_addr}')
     
     flash('You have been logged out successfully.', 'info')
     return redirect(url_for('index'))

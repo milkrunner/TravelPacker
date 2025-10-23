@@ -6,7 +6,7 @@ No OAuth client secret needed - just a Google Client ID
 
 import os
 import uuid
-from datetime import datetime
+import datetime
 from google.oauth2 import id_token
 from google.auth.transport import requests as google_requests
 from src.database import get_session, close_session
@@ -81,7 +81,7 @@ class GoogleSignInService:
             
             if user:
                 # Update last login and profile picture
-                setattr(user, 'last_login', datetime.utcnow())
+                setattr(user, 'last_login', datetime.datetime.now(datetime.timezone.utc))
                 if user_info.get('profile_picture'):
                     setattr(user, 'profile_picture', user_info['profile_picture'])
                 db_session.commit()
@@ -97,7 +97,7 @@ class GoogleSignInService:
                 setattr(user, 'oauth_provider', 'google')
                 setattr(user, 'oauth_id', user_info['oauth_id'])
                 setattr(user, 'profile_picture', user_info.get('profile_picture'))
-                setattr(user, 'last_login', datetime.utcnow())
+                setattr(user, 'last_login', datetime.datetime.now(datetime.timezone.utc))
                 db_session.commit()
                 return user
             
@@ -134,7 +134,7 @@ class GoogleSignInService:
                 oauth_id=user_info['oauth_id'],
                 profile_picture=user_info.get('profile_picture'),
                 is_active=True,
-                last_login=datetime.utcnow()
+                last_login=datetime.datetime.now(datetime.timezone.utc)
             )
 
             # Apply dummy password hash only if needed

@@ -73,6 +73,24 @@
 <script src="https://accounts.google.com/gsi/client" async defer></script>
 
 <script nonce="{{ csp_nonce() }}">
+    // Utility to show controlled error messages
+    function showLoginError(message) {
+        let errorDiv = document.getElementById('login-error-message');
+        if (!errorDiv) {
+            errorDiv = document.createElement('div');
+            errorDiv.id = 'login-error-message';
+            errorDiv.className = 'alert alert-warning';
+            errorDiv.style.marginTop = '1rem';
+            const methodsDiv = document.querySelector('.login-methods');
+            if (methodsDiv) {
+                methodsDiv.appendChild(errorDiv);
+            } else {
+                document.body.appendChild(errorDiv);
+            }
+        }
+        errorDiv.textContent = message;
+    }
+
     // Handle Google Sign-In response
     function handleGoogleSignIn(response) {
         // Show loading state
@@ -98,8 +116,17 @@
                 // Redirect to home page or dashboard
                 window.location.href = data.redirect || '/';
             } else {
-                // Show error message
-                alert('Sign-in failed: ' + (data.error || 'Unknown error'));
+                // Show generic error message
+                showLoginError('Sign-in failed. Please try again.');
+                // Optionally log error to server for diagnostics
+                fetch('/api/log-client-error', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        context: 'google-signin',
+                        error: data.error || 'Unknown error'
+                    })
+                });
                 if (container) {
                     container.style.opacity = '1';
                     container.style.pointerEvents = 'auto';
@@ -107,8 +134,17 @@
             }
         })
         .catch(error => {
-            console.error('Sign-in error:', error);
-            alert('An error occurred during sign-in. Please try again.');
+            // Show generic error message
+            showLoginError('An error occurred during sign-in. Please try again.');
+            // Optionally log error to server for diagnostics
+            fetch('/api/log-client-error', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    context: 'google-signin',
+                    error: error && error.toString ? error.toString() : 'Unknown error'
+                })
+            });
             if (container) {
                 container.style.opacity = '1';
                 container.style.pointerEvents = 'auto';

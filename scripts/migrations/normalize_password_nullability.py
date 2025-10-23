@@ -65,8 +65,31 @@ def detect_not_null(session):
 def normalize_sqlite(session):
     # SQLite cannot directly drop NOT NULL constraint; need table rebuild.
     print('🔧 Normalizing SQLite users.password_hash to be nullable...')
-    # Fetch schema definition
-    # Simplified approach: create new table with desired schema, copy data, drop old, rename.
+    # Introspect existing indexes and unique constraints
+    indexes = session.execute(text("PRAGMA index_list('users')")).fetchall()
+    index_sqls = []
+    for idx in indexes:
+        idx_name = idx[1]
+        # Skip sqlite_autoindex (implicit PK/unique)
+        if idx_name.startswith('sqlite_autoindex'):
+            continue
+        idx_info = session.execute(text(f"PRAGMA index_info('{idx_name}')")).fetchall()
+        columns = [row[2] for row in idx_info]
+        # Check if unique
+        unique = idx[2]
+        # Get index SQL if available
+        idx_sql_row = session.execute(text(f"SELECT sql FROM sqlite_master WHERE type='index' AND name='{idx_name}'")).fetchone()
+        if idx_sql_row and idx_sql_row[0]:
+            index_sqls.append(idx_sql_row[0])
+        else:
+            # Fallback: reconstruct index SQL
+            col_str = ', '.join(columns)
+            if unique:
+                index_sqls.append(f"CREATE UNIQUE INDEX IF NOT EXISTS {idx_name} ON users({col_str})")
+            else:
+                index_sqls.append(f"CREATE INDEX IF NOT EXISTS {idx_name} ON users({col_str})")
+
+    # Rebuild table
     session.execute(text('ALTER TABLE users RENAME TO users_legacy_tmp'))
     session.execute(text('''
         CREATE TABLE users (
@@ -88,10 +111,11 @@ def normalize_sqlite(session):
         SELECT id, username, email, password_hash, is_active, created_at, last_login, oauth_provider, oauth_id, profile_picture
         FROM users_legacy_tmp
     '''))
-    # Create index recreated if existed
-    session.execute(text('CREATE INDEX IF NOT EXISTS idx_user_oauth ON users(oauth_provider, oauth_id)'))
+    # Recreate all indexes and unique constraints
+    for sql in index_sqls:
+        session.execute(text(sql))
     session.execute(text('DROP TABLE users_legacy_tmp'))
-    print('✅ SQLite users.password_hash is now nullable.')
+    print('✅ SQLite users.password_hash is now nullable and all indexes/constraints are preserved.')
 
 
 def normalize_postgres(session):

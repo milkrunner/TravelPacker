@@ -19,7 +19,7 @@ endblock %} {% block content %}
     </div>
     <div class="trip-actions">
       <button
-        onclick="regenerateSuggestions('{{ trip.id }}')"
+        id="regenerateSuggestionsBtn"
         class="btn btn-secondary"
       >
         🤖 {% if items %}Get More Suggestions{% else %}Generate AI Suggestions{%
@@ -34,14 +34,14 @@ endblock %} {% block content %}
       </a>
       {% if not trip.is_template %}
       <button
-        onclick="showSaveTemplateModal('{{ trip.id }}')"
+        id="saveTemplateBtn"
         class="btn btn-primary"
       >
         💾 Save as Template
       </button>
       {% endif %}
       <button
-        onclick="showDeleteTripModal('{{ trip.id }}')"
+        id="deleteTripBtn"
         class="btn btn-danger"
       >
         🗑️ Delete Trip
@@ -86,7 +86,7 @@ endblock %} {% block content %}
   <div class="packing-list-section">
     <div class="section-header">
       <h2>📋 Packing List</h2>
-      <button onclick="showAddItemModal()" class="btn btn-primary">
+      <button id="addItemBtn" class="btn btn-primary">
         ➕ Add Item
       </button>
     </div>
@@ -111,13 +111,14 @@ endblock %} {% block content %}
               <input
                 type="checkbox"
                 id="item-{{ item.id }}"
+                class="item-checkbox-input"
+                data-item-id="{{ item.id }}"
                 {%
                 if
                 item.is_packed
                 %}checked{%
                 endif
                 %}
-                onchange="toggleItem('{{ item.id }}', this.checked)"
               />
             </div>
             <div class="item-content">
@@ -136,7 +137,8 @@ endblock %} {% block content %}
             </div>
             <div class="item-actions">
               <button
-                onclick="deleteItem('{{ item.id }}')"
+                class="delete-item-btn"
+                data-item-id="{{ item.id }}"
                 class="btn-icon"
                 title="Delete"
               >
@@ -165,9 +167,9 @@ endblock %} {% block content %}
   <div class="modal-content">
     <div class="modal-header">
       <h2>Add Item</h2>
-      <button onclick="closeAddItemModal()" class="close-btn">&times;</button>
+      <button class="close-btn close-add-item-modal">&times;</button>
     </div>
-    <form id="addItemForm" onsubmit="addItem(event)">
+    <form id="addItemForm">
       <div class="form-group">
         <label for="itemName">Item Name</label>
         <input type="text" id="itemName" required class="form-control" />
@@ -209,7 +211,7 @@ endblock %} {% block content %}
       <div class="modal-actions">
         <button
           type="button"
-          onclick="closeAddItemModal()"
+          class="cancel-add-item-btn"
           class="btn btn-secondary"
         >
           Cancel
@@ -225,7 +227,7 @@ endblock %} {% block content %}
   <div class="modal-content" style="max-width: 500px">
     <div class="modal-header">
       <h2>💾 Save as Template</h2>
-      <button onclick="closeSaveTemplateModal()" class="close-btn">
+      <button class="close-btn close-save-template-modal">
         &times;
       </button>
     </div>
@@ -248,7 +250,7 @@ endblock %} {% block content %}
         </p>
       </div>
       <div class="modal-actions">
-        <button type="button" onclick="closeSaveTemplateModal()" class="btn btn-secondary">
+        <button type="button" class="cancel-save-template-btn btn btn-secondary">
           Cancel
         </button>
         <button type="submit" class="btn btn-primary">
@@ -264,7 +266,7 @@ endblock %} {% block content %}
   <div class="modal-content" style="max-width: 400px">
     <div class="modal-header">
       <h2>⚠️ Confirm Delete</h2>
-      <button onclick="closeDeleteTripModal()" class="close-btn">
+      <button class="close-btn close-delete-trip-modal">
         &times;
       </button>
     </div>
@@ -277,10 +279,10 @@ endblock %} {% block content %}
       </p>
     </div>
     <div class="modal-actions">
-      <button onclick="closeDeleteTripModal()" class="btn btn-secondary">
+      <button class="cancel-delete-trip-btn btn btn-secondary">
         Cancel
       </button>
-      <button onclick="confirmDeleteTrip()" class="btn btn-danger">
+      <button id="confirmDeleteTripBtn" class="btn btn-danger">
         Delete Trip
       </button>
     </div>
@@ -292,7 +294,7 @@ endblock %} {% block content %}
   <div class="modal-content" style="max-width: 400px">
     <div class="modal-header">
       <h2>⚠️ Confirm Delete</h2>
-      <button onclick="closeDeleteItemModal()" class="close-btn">
+      <button class="close-btn close-delete-item-modal">
         &times;
       </button>
     </div>
@@ -302,10 +304,10 @@ endblock %} {% block content %}
       </p>
     </div>
     <div class="modal-actions">
-      <button onclick="closeDeleteItemModal()" class="btn btn-secondary">
+      <button class="cancel-delete-item-btn btn btn-secondary">
         Cancel
       </button>
-      <button onclick="confirmDeleteItem()" class="btn btn-danger">
+      <button id="confirmDeleteItemBtn" class="btn btn-danger">
         Delete Item
       </button>
     </div>
@@ -570,5 +572,86 @@ endblock %} {% block content %}
         btn.textContent = "🤖 Get More Suggestions";
       });
   }
+
+  // Event Listeners (CSP-compliant)
+  document.addEventListener('DOMContentLoaded', function() {
+    // Regenerate suggestions button
+    const regenerateBtn = document.getElementById('regenerateSuggestionsBtn');
+    if (regenerateBtn) {
+      regenerateBtn.addEventListener('click', function() {
+        regenerateSuggestions(tripId);
+      });
+    }
+
+    // Save template button
+    const saveTemplateBtn = document.getElementById('saveTemplateBtn');
+    if (saveTemplateBtn) {
+      saveTemplateBtn.addEventListener('click', function() {
+        showSaveTemplateModal(tripId);
+      });
+    }
+
+    // Delete trip button
+    const deleteTripBtn = document.getElementById('deleteTripBtn');
+    if (deleteTripBtn) {
+      deleteTripBtn.addEventListener('click', function() {
+        showDeleteTripModal(tripId);
+      });
+    }
+
+    // Add item button
+    const addItemBtn = document.getElementById('addItemBtn');
+    if (addItemBtn) {
+      addItemBtn.addEventListener('click', showAddItemModal);
+    }
+
+    // Item checkboxes
+    document.querySelectorAll('.item-checkbox-input').forEach(checkbox => {
+      checkbox.addEventListener('change', function() {
+        toggleItem(this.dataset.itemId, this.checked);
+      });
+    });
+
+    // Delete item buttons
+    document.querySelectorAll('.delete-item-btn').forEach(btn => {
+      btn.addEventListener('click', function() {
+        deleteItem(this.dataset.itemId);
+      });
+    });
+
+    // Add item form
+    const addItemForm = document.getElementById('addItemForm');
+    if (addItemForm) {
+      addItemForm.addEventListener('submit', addItem);
+    }
+
+    // Modal close buttons
+    document.querySelectorAll('.close-add-item-modal, .cancel-add-item-btn').forEach(btn => {
+      btn.addEventListener('click', closeAddItemModal);
+    });
+
+    document.querySelectorAll('.close-save-template-modal, .cancel-save-template-btn').forEach(btn => {
+      btn.addEventListener('click', closeSaveTemplateModal);
+    });
+
+    document.querySelectorAll('.close-delete-trip-modal, .cancel-delete-trip-btn').forEach(btn => {
+      btn.addEventListener('click', closeDeleteTripModal);
+    });
+
+    document.querySelectorAll('.close-delete-item-modal, .cancel-delete-item-btn').forEach(btn => {
+      btn.addEventListener('click', closeDeleteItemModal);
+    });
+
+    // Confirm buttons
+    const confirmDeleteTripBtn = document.getElementById('confirmDeleteTripBtn');
+    if (confirmDeleteTripBtn) {
+      confirmDeleteTripBtn.addEventListener('click', confirmDeleteTrip);
+    }
+
+    const confirmDeleteItemBtn = document.getElementById('confirmDeleteItemBtn');
+    if (confirmDeleteItemBtn) {
+      confirmDeleteItemBtn.addEventListener('click', confirmDeleteItem);
+    }
+  });
 </script>
 {% endblock %}

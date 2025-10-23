@@ -50,14 +50,20 @@ class NullCacheService:
 
 
 class CacheService:
-    """Redis-based caching service with graceful disable and NullCache fallback."""
+    """
+    Redis-based caching service with graceful disable and NullCache fallback.
+
+    Redis is enabled only if the USE_REDIS environment variable is set to 'true', '1', or 'yes'.
+    All other disabling logic is handled via this flag for clarity and consistency.
+    """
 
     def __init__(self, redis_url: str = "redis://localhost:6379/0"):
         self.redis_client = None  # type: ignore
         self.enabled = False
 
-        # Allow disable via env
-        if os.getenv('USE_REDIS', 'false').lower() not in ['true', '1', 'yes']:
+        # Single source of truth: USE_REDIS env variable
+        use_redis = os.getenv('USE_REDIS', 'false').lower() in ['true', '1', 'yes']
+        if not use_redis:
             print("ℹ️ Redis disabled via USE_REDIS flag (Cache: OFF)")
             return
 
@@ -121,7 +127,7 @@ class CacheService:
             cached = self.redis_client.get(key)  # type: ignore[attr-defined]
             if cached:
                 print("🚀 Cache HIT: AI suggestions")
-                return json.loads(cached)
+                return json.loads(str(cached))
             return None
         except RedisError as e:
             print(f"Cache read error: {e}")
@@ -155,7 +161,7 @@ class CacheService:
             cached = self.redis_client.get(key)  # type: ignore[attr-defined]
             if cached:
                 print(f"🚀 Cache HIT: Trip {trip_id}")
-                return json.loads(cached)
+                return json.loads(str(cached))
             return None
         except RedisError as e:
             print(f"Cache read error: {e}")
@@ -193,6 +199,14 @@ class CacheService:
             return {"enabled": False}
         try:  # type: ignore[attr-defined]
             info = self.redis_client.info()  # type: ignore[attr-defined]
+            # Ensure info is a dict, not an awaitable
+            if hasattr(info, '__await__'):
+                return {"enabled": False, "error": "Async Redis client detected, use sync client"}
+            
+            # Ensure info is a dictionary before accessing attributes
+            if not isinstance(info, dict):
+                return {"enabled": False, "error": "Redis info() returned non-dict type"}
+                
             return {
                 "enabled": True,
                 "connected_clients": info.get("connected_clients", 0),

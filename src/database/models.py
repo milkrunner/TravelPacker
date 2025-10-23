@@ -20,7 +20,6 @@ class User(Base, UserMixin):
     username = Column(String(80), unique=True, nullable=False, index=True)
     email = Column(String(120), unique=True, nullable=False, index=True)
     password_hash = Column(String(255), nullable=True)  # Nullable for OAuth users
-    is_active = Column(Boolean, default=True)
     created_at = Column(DateTime, default=datetime.utcnow)
     last_login = Column(DateTime)
     
@@ -42,10 +41,11 @@ class User(Base, UserMixin):
         self.password_hash = generate_password_hash(password)
     
     def check_password(self, password):
-        """Verify password against hash"""
-        if not self.password_hash:
-            return False
-        return check_password_hash(self.password_hash, password)
+        """Verify password against hash. Raises ValueError if password login is not allowed."""
+        if self.password_hash is None:
+            # Explicitly block password login for OAuth-only accounts
+            raise ValueError("Password login not allowed for OAuth-only accounts.")
+        return check_password_hash(str(self.password_hash), password)
     
     def __repr__(self):
         return f"<User(id='{self.id}', username='{self.username}')>"

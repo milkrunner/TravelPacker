@@ -58,7 +58,8 @@ if is_postgresql and USE_POSTGRES != 'false':
         if USE_POSTGRES == 'true':
             print(f"❌ PostgreSQL connection failed (USE_POSTGRES=true): {e}")
             raise
-        print(f"⚠️ PostgreSQL unavailable ({e.__class__.__name__}: {e}). Fallback → SQLite.")
+        print(f"⚠️ PostgreSQL unavailable ({type(e).__name__}: {e}). Fallback → SQLite.\n"
+              f"   Please check your DATABASE_URL and POSTGRES_PASSWORD environment variables.")
         DATABASE_URL = 'sqlite:///niknotes.db'
         is_postgresql = False
         engine_config = {
