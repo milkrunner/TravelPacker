@@ -25,6 +25,23 @@ from src.services.sanitization_service import ContentSanitizer
 
 load_dotenv()
 
+# Security: Log sanitization utility to prevent log injection attacks
+def sanitize_for_log(value):
+    """
+    Sanitize user input for safe logging to prevent log injection attacks.
+    Removes newlines, carriage returns, tabs, and other control characters.
+    
+    Args:
+        value: Any value to sanitize (typically string from user input)
+    
+    Returns:
+        Sanitized value safe for logging
+    """
+    if not isinstance(value, str):
+        return value
+    # Remove newlines, carriage returns, tabs, and other control characters
+    return value.replace('\n', '').replace('\r', '').replace('\t', ' ').replace('\x00', '')
+
 app = Flask(__name__)
 
 secret_key = os.getenv('FLASK_SECRET_KEY')
@@ -616,17 +633,6 @@ def csp_report():
     CSP violations indicate potential XSS attacks or misconfigured policies.
     This endpoint helps identify and respond to security threats.
     """
-    
-    def sanitize_for_log(value):
-        """
-        Sanitize user input for safe logging to prevent log injection attacks.
-        Removes newlines, carriage returns, and other control characters.
-        """
-        if not isinstance(value, str):
-            return value
-        # Remove newlines, carriage returns, tabs, and other control characters
-        return value.replace('\n', '').replace('\r', '').replace('\t', ' ').replace('\x00', '')
-    
     try:
         # Get the CSP violation report from the request
         report = request.get_json(force=True, silent=True)
@@ -778,8 +784,8 @@ def logout():
     
     logout_user()
     
-    # Log logout for security audit
-    print(f'User logout: {username} (ID: {user_id}) from IP: {request.remote_addr}')
+    # Log logout for security audit (sanitize username to prevent log injection)
+    print(f'User logout: {sanitize_for_log(username)} (ID: {user_id}) from IP: {request.remote_addr}')
     
     flash('You have been logged out successfully.', 'info')
     return redirect(url_for('index'))
