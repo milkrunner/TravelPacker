@@ -3,9 +3,9 @@ Input validation schemas for NikNotes
 Pydantic models to validate user input and prevent injection/data corruption
 """
 
-from pydantic import BaseModel, Field, validator, field_validator
+from pydantic import BaseModel, Field, field_validator
 from typing import List, Optional
-from datetime import datetime, date
+from datetime import datetime
 import re
 
 

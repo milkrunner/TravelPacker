@@ -5,7 +5,7 @@ Flask-based web interface for the trip packing assistant
 
 import os
 
-from flask import Flask, render_template, request, jsonify, redirect, url_for, send_file, flash, session
+from flask import Flask, render_template, request, jsonify, redirect, url_for, send_file, flash
 from flask_wtf.csrf import CSRFProtect
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
@@ -13,7 +13,6 @@ from flask_talisman import Talisman
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user
 from datetime import datetime
 from dotenv import load_dotenv
-from pydantic import ValidationError
 from src.services.trip_service import TripService
 from src.services.ai_service import AIService
 from src.services.packing_list_service import PackingListService
@@ -22,10 +21,6 @@ from src.services.oauth_service import GoogleSignInService
 from src.models.trip import TravelStyle, TransportMethod
 from src.database import init_db, get_session, close_session
 from src.database.models import User as DBUser
-from src.validators import (
-    TripCreateRequest, ItemCreateRequest, ItemToggleRequest
-)
-from src.services.audit_service import AuditLogger
 from src.services.sanitization_service import ContentSanitizer
 
 load_dotenv()

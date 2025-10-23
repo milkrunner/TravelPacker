@@ -56,10 +56,16 @@ This ensures the app works even without an API key for testing purposes.
 
 ## Testing
 
-Run the application:
+Run the web application:
 
 ```powershell
-python main.py
+python web_app.py
+```
+
+Or using Docker:
+
+```powershell
+docker compose up
 ```
 
 With a valid API key, you'll see AI-generated suggestions. Without one, you'll see mock suggestions.
