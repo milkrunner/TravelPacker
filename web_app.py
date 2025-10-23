@@ -616,6 +616,17 @@ def csp_report():
     CSP violations indicate potential XSS attacks or misconfigured policies.
     This endpoint helps identify and respond to security threats.
     """
+    
+    def sanitize_for_log(value):
+        """
+        Sanitize user input for safe logging to prevent log injection attacks.
+        Removes newlines, carriage returns, and other control characters.
+        """
+        if not isinstance(value, str):
+            return value
+        # Remove newlines, carriage returns, tabs, and other control characters
+        return value.replace('\n', '').replace('\r', '').replace('\t', ' ').replace('\x00', '')
+    
     try:
         # Get the CSP violation report from the request
         report = request.get_json(force=True, silent=True)
@@ -643,13 +654,16 @@ def csp_report():
             'ip_address': get_remote_address(),
         }
         
+        # Sanitize all string values to prevent log injection
+        sanitized_details = {k: sanitize_for_log(v) for k, v in violation_details.items()}
+        
         # Log to application logger (configure logging for production)
         app.logger.warning(
-            f"CSP Violation Detected: {violation_details['violated_directive']} | "
-            f"Blocked: {violation_details['blocked_uri']} | "
-            f"Page: {violation_details['document_uri']} | "
-            f"Source: {violation_details['source_file']}:{violation_details['line_number']} | "
-            f"IP: {violation_details['ip_address']}"
+            f"CSP Violation Detected: {sanitized_details['violated_directive']} | "
+            f"Blocked: {sanitized_details['blocked_uri']} | "
+            f"Page: {sanitized_details['document_uri']} | "
+            f"Source: {sanitized_details['source_file']}:{sanitized_details['line_number']} | "
+            f"IP: {sanitized_details['ip_address']}"
         )
         
         # In production, you might want to:
