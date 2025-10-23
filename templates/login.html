@@ -3,71 +3,244 @@
 {% block title %}Login - NikNotes{% endblock %}
 
 {% block content %}
-<div class="container" style="max-width: 500px; margin: 2rem auto;">
-    <div class="card">
-        <h1 style="text-align: center; margin-bottom: 2rem;">🔐 Login to NikNotes</h1>
-        
+<div class="login-container">
+    <div class="login-card">
+        <div class="login-header">
+            <span class="logo-large">🎒</span>
+            <h1>Welcome to NikNotes</h1>
+            <p class="subtitle">Your AI-powered trip packing assistant</p>
+        </div>
+
         {% with messages = get_flashed_messages(with_categories=true) %}
             {% if messages %}
                 {% for category, message in messages %}
-                    <div class="alert alert-{{ category }}" style="padding: 1rem; margin-bottom: 1rem; border-radius: 8px; background-color: {% if category == 'error' %}#fee; color: #c00{% else %}#efe; color: #0a0{% endif %};">
+                    <div class="alert alert-{{ category }}">
                         {{ message }}
                     </div>
                 {% endfor %}
             {% endif %}
         {% endwith %}
-        
-        <form method="POST" action="{{ url_for('login') }}">
-            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-            
-            <div class="form-group" style="margin-bottom: 1.5rem;">
-                <label for="username" style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Username</label>
-                <input 
-                    type="text" 
-                    id="username" 
-                    name="username" 
-                    class="form-control" 
-                    required 
-                    autofocus
-                    style="width: 100%; padding: 0.75rem; border: 1px solid #ddd; border-radius: 6px; font-size: 1rem;"
-                >
+
+        <div class="login-methods">
+            {% if google_signin_enabled %}
+            <!-- Google Sign-In Button (will be rendered by Google) -->
+            <div id="g_id_onload"
+                 data-client_id="{{ google_client_id }}"
+                 data-callback="handleGoogleSignIn"
+                 data-auto_prompt="false">
             </div>
-            
-            <div class="form-group" style="margin-bottom: 1.5rem;">
-                <label for="password" style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Password</label>
-                <input 
-                    type="password" 
-                    id="password" 
-                    name="password" 
-                    class="form-control" 
-                    required
-                    style="width: 100%; padding: 0.75rem; border: 1px solid #ddd; border-radius: 6px; font-size: 1rem;"
-                >
+            <div class="g_id_signin"
+                 data-type="standard"
+                 data-size="large"
+                 data-theme="outline"
+                 data-text="signin_with"
+                 data-shape="rectangular"
+                 data-logo_alignment="left"
+                 data-width="400">
             </div>
-            
-            <div class="form-group" style="margin-bottom: 1.5rem;">
-                <label style="display: flex; align-items: center; cursor: pointer;">
-                    <input 
-                        type="checkbox" 
-                        name="remember" 
-                        style="margin-right: 0.5rem;"
-                    >
-                    <span>Remember me</span>
-                </label>
+            {% else %}
+            <div class="alert alert-warning">
+                <p><strong>Google Sign-In not configured</strong></p>
+                <p class="small">Please set <code>GOOGLE_CLIENT_ID</code> in your .env file.</p>
+                <p class="small">Get a Client ID at: <a href="https://console.cloud.google.com/apis/credentials" target="_blank">Google Cloud Console</a></p>
+                <ol class="small" style="text-align: left; margin-top: 1rem;">
+                    <li>Create a new project or select existing</li>
+                    <li>Enable Google Identity Services</li>
+                    <li>Create OAuth 2.0 Client ID (Web application)</li>
+                    <li>Add authorized JavaScript origins: <code>http://localhost:5000</code></li>
+                    <li>Copy the Client ID to your .env file</li>
+                </ol>
             </div>
-            
-            <button 
-                type="submit" 
-                class="btn-primary" 
-                style="width: 100%; padding: 1rem; font-size: 1.1rem; border: none; border-radius: 8px; cursor: pointer;"
-            >
-                Login
-            </button>
-        </form>
-        
-        <div style="text-align: center; margin-top: 2rem; padding-top: 1.5rem; border-top: 1px solid #eee;">
-            <p>Don't have an account? <a href="{{ url_for('register') }}" style="color: #4CAF50; text-decoration: none; font-weight: 500;">Register here</a></p>
+            {% endif %}
+        </div>
+
+        <div class="login-features">
+            <h3>Why NikNotes?</h3>
+            <ul class="feature-list">
+                <li>🤖 AI-powered packing suggestions</li>
+                <li>⚡ Lightning-fast cached responses (10-50ms)</li>
+                <li>🌤️ Weather-based recommendations</li>
+                <li>📋 Reusable trip templates</li>
+                <li>📄 PDF export for offline access</li>
+                <li>🌙 Beautiful dark mode</li>
+            </ul>
         </div>
     </div>
 </div>
+
+{% if google_signin_enabled %}
+<!-- Google Identity Services Library -->
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+
+<script nonce="{{ csp_nonce() }}">
+    // Utility to show controlled error messages
+    function showLoginError(message) {
+        let errorDiv = document.getElementById('login-error-message');
+        if (!errorDiv) {
+            errorDiv = document.createElement('div');
+            errorDiv.id = 'login-error-message';
+            errorDiv.className = 'alert alert-warning';
+            errorDiv.style.marginTop = '1rem';
+            const methodsDiv = document.querySelector('.login-methods');
+            if (methodsDiv) {
+                methodsDiv.appendChild(errorDiv);
+            } else {
+                document.body.appendChild(errorDiv);
+            }
+        }
+        errorDiv.textContent = message;
+    }
+
+    // Handle Google Sign-In response
+    function handleGoogleSignIn(response) {
+        // Show loading state
+        const container = document.querySelector('.g_id_signin');
+        if (container) {
+            container.style.opacity = '0.5';
+            container.style.pointerEvents = 'none';
+        }
+
+        // Send the credential to our backend for verification
+        fetch('/auth/google', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                credential: response.credential
+            })
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.success) {
+                // Redirect to home page or dashboard
+                window.location.href = data.redirect || '/';
+            } else {
+                // Show generic error message
+                showLoginError('Sign-in failed. Please try again.');
+                // Optionally log error to server for diagnostics
+                fetch('/api/log-client-error', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        context: 'google-signin',
+                        error: data.error || 'Unknown error'
+                    })
+                });
+                if (container) {
+                    container.style.opacity = '1';
+                    container.style.pointerEvents = 'auto';
+                }
+            }
+        })
+        .catch(error => {
+            // Show generic error message
+            showLoginError('An error occurred during sign-in. Please try again.');
+            // Optionally log error to server for diagnostics
+            fetch('/api/log-client-error', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    context: 'google-signin',
+                    error: error && error.toString ? error.toString() : 'Unknown error'
+                })
+            });
+            if (container) {
+                container.style.opacity = '1';
+                container.style.pointerEvents = 'auto';
+            }
+        });
+    }
+</script>
+{% endif %}
+
+<style nonce="{{ csp_nonce() }}">
+    .login-container {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: calc(100vh - 200px);
+        padding: 2rem 1rem;
+    }
+
+    .login-card {
+        background: white;
+        border-radius: 12px;
+        padding: 3rem;
+        max-width: 500px;
+        width: 100%;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+
+    .dark-mode .login-card {
+        background: var(--dark-card-bg);
+    }
+
+    .login-header {
+        text-align: center;
+        margin-bottom: 2rem;
+    }
+
+    .logo-large {
+        font-size: 4rem;
+        display: block;
+        margin-bottom: 1rem;
+    }
+
+    .login-header h1 {
+        font-size: 2rem;
+        margin: 0 0 0.5rem 0;
+    }
+
+    .subtitle {
+        color: var(--text-secondary);
+    }
+
+    .login-methods {
+        display: flex;
+        justify-content: center;
+        margin: 2rem 0;
+    }
+
+    .login-features {
+        margin-top: 3rem;
+        padding-top: 2rem;
+        border-top: 1px solid #eee;
+    }
+
+    .dark-mode .login-features {
+        border-top-color: #444;
+    }
+
+    .feature-list {
+        list-style: none;
+        padding: 0;
+    }
+
+    .feature-list li {
+        padding: 0.5rem 0;
+    }
+
+    .alert {
+        padding: 1rem;
+        border-radius: 8px;
+        margin-bottom: 1rem;
+    }
+
+    .alert-warning {
+        background: #fff3cd;
+        border: 1px solid #ffc107;
+        color: #856404;
+    }
+
+    .dark-mode .alert-warning {
+        background: #3a3000;
+        border-color: #664d00;
+        color: #ffc107;
+    }
+
+    .small {
+        font-size: 0.875rem;
+    }
+</style>
 {% endblock %}
