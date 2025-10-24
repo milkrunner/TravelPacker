@@ -2,15 +2,18 @@
 Authentication blueprint - Login, logout, OAuth routes
 """
 
+from typing import TYPE_CHECKING, Optional
 from flask import Blueprint, render_template, request, jsonify, redirect, url_for, flash
 from flask_login import login_user, logout_user, login_required, current_user
 from src.extensions import csrf
 
+if TYPE_CHECKING:
+    from src.services.oauth_service import GoogleSignInService
 
 auth_bp = Blueprint('auth', __name__)
 
 # OAuth service will be initialized in factory
-google_signin_service = None
+google_signin_service: Optional['GoogleSignInService'] = None
 
 
 def init_services(service_container):
@@ -24,6 +27,8 @@ def login():
     """Login page with Google Sign-In"""
     if current_user.is_authenticated:
         return redirect(url_for('main.index'))
+    
+    assert google_signin_service is not None, "OAuthService not initialized"
     return render_template(
         'login.html', 
         google_signin_enabled=google_signin_service.enabled,
@@ -37,6 +42,7 @@ def google_signin():
     """Verify Google Sign-In token and log user in"""
     from src.utils.security_utils import track_authentication_attempt, security_monitor, get_ip_address
     
+    assert google_signin_service is not None, "OAuthService not initialized"
     ip_address = get_ip_address()
     
     # Check if IP is flagged as suspicious
@@ -91,12 +97,10 @@ def google_signin():
             from src.services.audit_service import AuditLogger
             AuditLogger.log_security_event(
                 event_type='login_success',
-                severity='info',
-                details={'user_id': user.id, 'username': user.username, 'oauth_provider': 'google'},
-                user_id=user.id,
-                ip_address=ip_address
+                action='google_oauth_login',
+                severity='info'
             )
-        except ImportError:
+        except (ImportError, AttributeError):
             pass
         
         # Return success response
@@ -119,11 +123,10 @@ def google_signin():
             from src.services.audit_service import AuditLogger
             AuditLogger.log_security_event(
                 event_type='login_error',
-                severity='warning',
-                details={'error': str(e)},
-                ip_address=ip_address
+                action='google_oauth_error',
+                severity='warning'
             )
-        except ImportError:
+        except (ImportError, AttributeError):
             pass
         
         return jsonify({'success': False, 'error': 'Authentication error'}), 500
