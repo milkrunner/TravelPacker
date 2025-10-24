@@ -39,7 +39,7 @@ ENV PATH=/root/.local/bin:$PATH
 # Copy application code
 COPY . .
 
-# Create directory for SQLite fallback (if needed)
+# Create data directory
 RUN mkdir -p /app/data
 
 # Create non-root user and group

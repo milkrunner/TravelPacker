@@ -73,8 +73,7 @@ services:
     container_name: niknotes-web
     restart: unless-stopped
     environment:
-      # Database configuration
-      # Note: If PostgreSQL is unavailable, the app automatically falls back to SQLite (niknotes.db)
+      # Database configuration (PostgreSQL required)
       DATABASE_URL: postgresql://${POSTGRES_USER:-niknotes_user}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-niknotes_db}
       # Redis configuration
       # Note: Redis is optional - if unavailable, caching will be disabled automatically

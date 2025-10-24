@@ -1,12 +1,15 @@
+"""
+⚠️ NOTE: This test file uses the PostgreSQL test database from conftest.py.
+   SQLite support has been removed from the application.
+"""
 import os
-import sqlite3
 import uuid
 from datetime import datetime, timezone
 
 import pytest
 
 from src.services.oauth_service import GoogleSignInService
-from src.database import init_db, get_session, close_session, engine
+from src.database import init_db, get_session, close_session
 from src.database.models import User as DBUser
 
 
@@ -21,31 +24,9 @@ def google_service():
 
 
 @pytest.fixture(autouse=True)
-def setup_db(tmp_path, monkeypatch):
-    """Use an isolated SQLite file per test module to avoid clobbering real db.
-    We intentionally recreate a legacy NOT NULL constraint scenario by creating users table without nullable password_hash.
-    Then run init_db() which triggers auto-patch logic without altering NOT NULL (simulating pre-migration)."""
-    test_db = tmp_path / 'legacy.db'
-    monkeypatch.setenv('DATABASE_URL', f'sqlite:///{test_db}')
-    # Reinitialize engine indirectly by importing/reloading database module would be complex; direct connect instead.
-    # Create legacy schema manually:
-    conn = sqlite3.connect(test_db)
-    cur = conn.cursor()
-    cur.execute("""
-        CREATE TABLE users (
-            id TEXT PRIMARY KEY,
-            username VARCHAR(80) NOT NULL,
-            email VARCHAR(120) NOT NULL,
-            password_hash VARCHAR(255) NOT NULL,
-            is_active BOOLEAN,
-            created_at DATETIME,
-            last_login DATETIME
-        )
-    """)
-    conn.commit()
-    conn.close()
-
-    # Now run init_db() to add new tables + attempt auto-patch for oauth columns
+def setup_db():
+    """Use the PostgreSQL test database configured in conftest.py"""
+    # Ensure database is initialized
     init_db()
     yield
     # Cleanup sessions after each test
