@@ -26,7 +26,7 @@ endblock %} {% block content %}
         endif %}
       </button>
       <a
-        href="{{ url_for('export_trip_pdf', trip_id=trip.id) }}"
+        href="{{ url_for('trips.export_trip_pdf', trip_id=trip.id) }}"
         class="btn btn-primary"
         download
       >

@@ -15,12 +15,12 @@
         <div class="container">
             <div class="nav-brand">
                 <span class="logo">🎒</span>
-                <a href="{{ url_for('index') }}" class="brand-name">NikNotes</a>
+                <a href="{{ url_for('main.index') }}" class="brand-name">NikNotes</a>
             </div>
             <div class="nav-links">
                 {% if current_user.is_authenticated %}
-                <a href="{{ url_for('index') }}" class="nav-link">My Trips</a>
-                <a href="{{ url_for('new_trip') }}" class="nav-link btn-primary">➕ New Trip</a>
+                <a href="{{ url_for('main.index') }}" class="nav-link">My Trips</a>
+                <a href="{{ url_for('trips.new_trip') }}" class="nav-link btn-primary">➕ New Trip</a>
                 <div class="user-menu">
                     {% if current_user.profile_picture %}
                     <img src="{{ current_user.profile_picture }}" alt="{{ current_user.username }}" class="user-avatar">
@@ -28,10 +28,10 @@
                     <span class="user-avatar-text">{{ current_user.username[0].upper() }}</span>
                     {% endif %}
                     <span class="user-name">{{ current_user.username }}</span>
-                    <a href="{{ url_for('logout') }}" class="nav-link logout-link">Logout</a>
+                    <a href="{{ url_for('auth.logout') }}" class="nav-link logout-link">Logout</a>
                 </div>
                 {% else %}
-                <a href="{{ url_for('login') }}" class="nav-link btn-primary">🔐 Login</a>
+                <a href="{{ url_for('auth.login') }}" class="nav-link btn-primary">🔐 Login</a>
                 {% endif %}
                 <button id="darkModeToggle" class="dark-mode-toggle" aria-label="Toggle dark mode">
                     <span class="toggle-icon light-icon">☀️</span>

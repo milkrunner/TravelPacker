@@ -27,8 +27,8 @@
                 <p><strong>{{ template.transport_display }}</strong></p>
             </div>
             <div class="trip-actions">
-                <a href="{{ url_for('create_from_template', template_id=template.id) }}" class="btn btn-primary">Use Template</a>
-                <a href="{{ url_for('view_trip', trip_id=template.id) }}" class="btn btn-secondary">View</a>
+                <a href="{{ url_for('trips.create_from_template', template_id=template.id) }}" class="btn btn-primary">Use Template</a>
+                <a href="{{ url_for('trips.view_trip', trip_id=template.id) }}" class="btn btn-secondary">View</a>
             </div>
         </div>
         {% endfor %}
@@ -53,7 +53,7 @@
                 <p><strong>{{ trip.transport_display }}</strong></p>
             </div>
             <div class="trip-actions">
-                <a href="{{ url_for('view_trip', trip_id=trip.id) }}" class="btn btn-primary">View Details</a>
+                <a href="{{ url_for('trips.view_trip', trip_id=trip.id) }}" class="btn btn-primary">View Details</a>
             </div>
         </div>
         {% endfor %}
@@ -63,7 +63,7 @@
         <div class="empty-icon">✈️</div>
         <h2>No trips yet!</h2>
         <p>Start planning your next adventure by creating your first trip.</p>
-        <a href="{{ url_for('new_trip') }}" class="btn btn-primary btn-large">Create Your First Trip</a>
+        <a href="{{ url_for('trips.new_trip') }}" class="btn btn-primary btn-large">Create Your First Trip</a>
     </div>
     {% endif %}
 </div>
