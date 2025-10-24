@@ -54,7 +54,6 @@ def run_migration():
                     id='user_default_admin',
                     username='admin',
                     email='admin@niknotes.local',
-                    is_active=True,
                     created_at=datetime.utcnow()
                 )
                 default_user.set_password('changeme123')  # Change this!
@@ -89,7 +88,6 @@ def run_migration():
                 id='user_admin_' + datetime.utcnow().strftime('%Y%m%d_%H%M%S'),
                 username='admin',
                 email='admin@niknotes.local',
-                is_active=True,
                 created_at=datetime.utcnow()
             )
             admin_user.set_password('changeme123')

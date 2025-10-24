@@ -9,7 +9,7 @@ block content %}
   </div>
 
   <div class="form-container">
-    <form method="POST" action="{{ url_for('create_from_template', template_id=template.id) }}" class="trip-form">
+    <form method="POST" action="{{ url_for('trips.create_from_template', template_id=template.id) }}" class="trip-form">
       <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
       <div class="form-section">
         <h2>📍 Destination & Dates</h2>
@@ -141,7 +141,7 @@ block content %}
       </div>
 
       <div class="form-actions">
-        <a href="{{ url_for('index') }}" class="btn btn-secondary">Cancel</a>
+        <a href="{{ url_for('main.index') }}" class="btn btn-secondary">Cancel</a>
         <button type="submit" class="btn btn-primary">
           Create Trip from Template
         </button>

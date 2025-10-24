@@ -9,7 +9,7 @@ block content %}
   </div>
 
   <div class="form-container">
-    <form method="POST" action="{{ url_for('new_trip') }}" class="trip-form">
+    <form method="POST" action="{{ url_for('trips.new_trip') }}" class="trip-form">
       <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
       <div class="form-section">
         <h2>📍 Destination & Dates</h2>
@@ -150,7 +150,7 @@ block content %}
       </div>
 
       <div class="form-actions">
-        <a href="{{ url_for('index') }}" class="btn btn-secondary">Cancel</a>
+        <a href="{{ url_for('main.index') }}" class="btn btn-secondary">Cancel</a>
         <button type="submit" class="btn btn-primary">
           Create Trip
         </button>
