@@ -1,7 +1,7 @@
 """Maintenance script: Normalize password_hash nullability for legacy databases.
 
 Purpose:
-    Older SQLite/Postgres schemas may have `users.password_hash` defined as NOT NULL.
+    """\n    ⚠️ DEPRECATED: SQLite support has been removed. Use PostgreSQL with Alembic migrations.\n    \n    Ensure users.password_hash is nullable to support OAuth-only accounts.\n    Older Postgres schemas may have `users.password_hash` defined as NOT NULL.
     For OAuth / Google Sign-In users we allow it to be NULL. This script adjusts the schema.
 
 Behavior:

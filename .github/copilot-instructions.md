@@ -3,7 +3,7 @@
 ## Project Overview
 **NikNotes** is an AI-powered travel packing assistant built with Flask, PostgreSQL, Redis, and Google Gemini. The app helps users create intelligent packing lists based on trip details, with weather integration and AI suggestions cached for blazing-fast responses (10-50ms).
 
-**Key architectural principle**: Performance-first design with fallback strategies (PostgreSQL → SQLite, Redis → no cache, Gemini → mock data).
+**Key architectural principle**: Performance-first design with PostgreSQL required, fallback strategies for Redis → no cache, Gemini → mock data.
 
 ## Architecture Quick Reference
 
@@ -171,7 +171,7 @@ Tuned in `docker-compose.yml`:
 **Query pattern**: Use `lazy='selectin'` for relationships (avoids N+1), eager load in repositories.
 
 ### Fallback Strategies
-- **Database**: PostgreSQL → SQLite (`data/niknotes.db`)
+- **Database**: PostgreSQL (required - no fallback)
 - **Cache**: Redis → disabled (direct API calls)
 - **AI**: Gemini → mock suggestions (`_get_mock_suggestions()`)
 - **Weather**: API → `None` (no weather in suggestions)
