@@ -62,9 +62,9 @@ class TripService:
             return list(self.trips.values())
     
     def update_trip(self, trip_id: str, **kwargs) -> Optional[Trip]:
-        """Update trip details"""
+        """Update trip details and invalidate AI suggestion cache"""
         if self.use_database:
-            return TripRepository.update(trip_id, **kwargs)
+            result = TripRepository.update(trip_id, **kwargs)
         else:
             trip = self.trips.get(trip_id)
             if not trip:
@@ -74,11 +74,31 @@ class TripService:
             for key, value in kwargs.items():
                 if hasattr(trip, key):
                     setattr(trip, key, value)
-            
-            return trip
+            result = trip
+        
+        # Invalidate AI suggestion cache since trip context changed
+        if result:
+            try:
+                from src.services.cache_service import get_cache_service
+                cache = get_cache_service()
+                cache.invalidate_ai_suggestions_for_trip(trip_id)
+                cache.invalidate_trip(trip_id)
+            except Exception as e:
+                print(f"Cache invalidation warning: {e}")
+        
+        return result
     
     def delete_trip(self, trip_id: str) -> bool:
-        """Delete a trip"""
+        """Delete a trip and invalidate caches"""
+        # Invalidate caches before deletion
+        try:
+            from src.services.cache_service import get_cache_service
+            cache = get_cache_service()
+            cache.invalidate_ai_suggestions_for_trip(trip_id)
+            cache.invalidate_trip(trip_id)
+        except Exception as e:
+            print(f"Cache invalidation warning: {e}")
+        
         if self.use_database:
             return TripRepository.delete(trip_id)
         else:
