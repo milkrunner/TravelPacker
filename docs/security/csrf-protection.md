@@ -266,6 +266,7 @@ def handle_csrf_error(error):
 ```
 
 **User-Facing Page:** `templates/errors/csrf_error.html`
+
 - Clear explanation of what happened
 - One-click "Refresh Page" button
 - Link to home page
