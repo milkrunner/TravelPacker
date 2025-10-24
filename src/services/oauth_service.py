@@ -120,7 +120,10 @@ class GoogleSignInService:
             db_session.commit()
             db_session.refresh(new_user)
             
-            print(f"✅ Created new user via Google Sign-In: {new_user.email}")
+            # Sanitize email for safe logging (prevent log injection)
+            email = getattr(new_user, 'email', 'unknown')
+            safe_email = email.replace('\n', '').replace('\r', '').replace('\t', ' ') if email and email != 'unknown' else 'unknown'
+            print(f"✅ Created new user via Google Sign-In: {safe_email}")
             return new_user
             
         except Exception as e:
