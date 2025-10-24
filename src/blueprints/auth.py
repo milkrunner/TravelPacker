@@ -101,6 +101,7 @@ def google_signin():
                 severity='info'
             )
         except (ImportError, AttributeError):
+            # AuditLogger is optional - authentication should succeed even if audit logging fails
             pass
         
         # Return success response
@@ -127,6 +128,7 @@ def google_signin():
                 severity='warning'
             )
         except (ImportError, AttributeError):
+            # AuditLogger is optional - error handling continues even if audit logging fails
             pass
         
         return jsonify({'success': False, 'error': 'Authentication error'}), 500
