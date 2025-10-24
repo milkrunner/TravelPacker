@@ -7,6 +7,7 @@ from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
 from flask_talisman import Talisman
 from flask_login import LoginManager
+from src.utils.security_utils import rate_limit_key_func
 
 
 # Initialize extensions without app binding
@@ -24,12 +25,12 @@ def init_extensions(app):
     # CSRF Protection
     csrf.init_app(app)
     
-    # Rate Limiter
+    # Rate Limiter with per-user and per-IP support
     global limiter
     if app.config.get('RATELIMIT_ENABLED', True):
         storage_url = app.config.get('RATELIMIT_STORAGE_URL', 'memory://')
         limiter = Limiter(
-            key_func=get_remote_address,
+            key_func=rate_limit_key_func,  # Use custom key function for user+IP
             app=app,
             default_limits=["200 per day", "50 per hour"],
             storage_uri=storage_url,
@@ -37,7 +38,11 @@ def init_extensions(app):
             strategy="fixed-window",
         )
         backend_type = "Redis" if "redis://" in storage_url else "in-memory"
-        print(f"✅ Rate limiter initialized with {backend_type} backend")
+        print(f"✅ Rate limiter initialized with {backend_type} backend (per-user + per-IP)")
+        
+        # Start security monitor cleanup task
+        from src.utils.security_utils import start_cleanup_task
+        start_cleanup_task()
     else:
         limiter = Limiter(
             key_func=get_remote_address,

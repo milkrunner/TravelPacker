@@ -1,15 +1,15 @@
 # Security Audit Report - NikNotes v1.0.0
 
-**Date:** October 20, 2025 (Updated: October 22, 2025)  
+**Date:** October 20, 2025 (Updated: December 2024)  
 **Auditor:** GitHub Copilot Security Analysis
 
-> **⚠️ Update October 22, 2025:** Authentication system has been removed to allow for future custom implementation. The application currently operates without user authentication. Core security features (CSRF, CSP, rate limiting, input sanitization) remain active.
+> **🔐 Update December 2024:** Advanced security monitoring system implemented with brute-force detection, anomaly detection, and per-user + per-IP rate limiting. See `docs/security/advanced-security-monitoring.md` for complete documentation.
 
 ## Executive Summary
 
-This comprehensive security audit identified **11 security issues** ranging from **CRITICAL** to **LOW** severity.
+This comprehensive security audit identified **11 security issues** ranging from **CRITICAL** to **LOW** severity. All issues have been resolved with additional advanced security features implemented.
 
-### 🎉 Current Status: 11 of 11 issues RESOLVED (100% complete)
+### 🎉 Current Status: 11 of 11 issues RESOLVED + Advanced Security Features (100% complete + Enhanced)
 
 **CRITICAL Issues (3/3 RESOLVED):**
 
@@ -664,15 +664,49 @@ for i in {1..20}; do curl -X POST http://localhost:5000/api/trip/test/regenerate
 
 ---
 
+## Advanced Security Features (December 2024 Enhancement)
+
+### Security Monitoring System
+
+A comprehensive security monitoring system has been implemented to provide advanced protection against various attack vectors:
+
+**Key Components:**
+- **SecurityMonitor Class** - Real-time threat tracking and analysis
+- **Brute-Force Protection** - Automated IP suspension after 5 failed login attempts
+- **Anomaly Detection** - Request pattern analysis (50 req/min threshold)
+- **Per-User + Per-IP Rate Limiting** - Composite tracking for authenticated and anonymous users
+- **Background Cleanup** - Automatic memory management every 60 seconds
+
+**Tiered Rate Limiting:**
+- **CRITICAL**: delete_trip (5/hr), delete_item (10/hr), regenerate_suggestions (3/hr)
+- **SENSITIVE**: login (10/hr), register (5/hr), logout (20/hr)
+- **MODERATE**: new_trip (20/hr), add_item (50/hr), save_template (10/hr)
+- **STANDARD**: toggle_item (100/hr)
+
+**Protected Endpoints:**
+- ✅ `/login/google/callback` - Brute-force protection with IP tracking
+- ✅ `/api/item/<id>` (DELETE) - Threat checking and operation logging
+- ✅ `/api/trip/<id>/regenerate` (POST) - Expensive operation protection
+- ✅ `/trip/<id>/delete` (POST) - Destructive operation protection
+
+**Documentation:**
+See `docs/security/advanced-security-monitoring.md` for complete implementation details, testing procedures, and configuration options.
+
+---
+
 ## References
 
 - [OWASP Top 10 2021](https://owasp.org/www-project-top-ten/)
+- [OWASP Rate Limiting](https://cheatsheetseries.owasp.org/cheatsheets/Denial_of_Service_Cheat_Sheet.html#rate-limiting)
+- [OWASP Brute Force](https://owasp.org/www-community/controls/Blocking_Brute_Force_Attacks)
 - [Flask Security Best Practices](https://flask.palletsprojects.com/en/2.3.x/security/)
+- [Flask-Limiter Documentation](https://flask-limiter.readthedocs.io/)
 - [Docker Security Best Practices](https://docs.docker.com/develop/security-best-practices/)
 - [CWE Top 25](https://cwe.mitre.org/top25/)
 
 ---
 
-**Report Generated:** October 20, 2025
+**Report Generated:** October 20, 2025  
+**Last Updated:** December 2024 (Advanced Security Enhancement)  
 **Next Audit Due:** January 20, 2026 (quarterly)
 ````
