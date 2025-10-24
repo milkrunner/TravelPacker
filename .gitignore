@@ -23,6 +23,12 @@ wheels/
 .installed.cfg
 *.egg
 
+# Backup and temporary files
+*.old
+*.bak
+*.tmp
+*~
+
 # Environment
 .env
 .venv
@@ -32,7 +38,6 @@ wheels/
 .idea/
 *.swp
 *.swo
-*~
 
 # Database
 *.db
