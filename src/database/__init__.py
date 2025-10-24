@@ -64,10 +64,39 @@ Base = declarative_base()
 
 
 def init_db():
-    """Initialize the database - create all tables"""
+    """Initialize the database using Alembic migrations
+    
+    This function runs pending migrations to ensure the database schema is up to date.
+    Use 'alembic upgrade head' manually for more control, or this will run automatically.
+    """
+    from alembic.config import Config
+    from alembic import command
+    import os
+    from pathlib import Path
+    
+    # Import models to ensure they're registered with Base.metadata
     from src.database.models import Trip, PackingItem, Traveler, User
     from src.database.audit_models import AuditLog
-    Base.metadata.create_all(bind=engine)
+    
+    try:
+        # Get the alembic.ini file path
+        alembic_ini = Path(__file__).parent.parent.parent / 'alembic.ini'
+        
+        if not alembic_ini.exists():
+            print("⚠️  alembic.ini not found. Falling back to create_all() for development.")
+            Base.metadata.create_all(bind=engine)
+            return
+        
+        # Configure Alembic
+        alembic_cfg = Config(str(alembic_ini))
+        
+        # Run migrations to head (latest version)
+        command.upgrade(alembic_cfg, "head")
+        
+    except Exception as e:
+        print(f"⚠️  Migration error: {e}")
+        print("   Falling back to create_all() for development.")
+        Base.metadata.create_all(bind=engine)
 
 
 def get_session():

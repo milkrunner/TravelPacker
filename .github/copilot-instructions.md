@@ -252,6 +252,25 @@ finally:
 
 **Always** use try-finally to ensure session cleanup.
 
+### Database Migrations (Alembic)
+
+**All schema changes** must go through Alembic migrations:
+
+```bash
+# Create migration after modifying models
+python scripts/db_migrate.py create "Add email_verified column"
+
+# Apply migrations
+python scripts/db_migrate.py upgrade
+
+# Check current version
+python scripts/db_migrate.py current
+```
+
+**Never** use `Base.metadata.create_all()` except in tests. Migrations run automatically on app startup via `init_db()`.
+
+See `docs/operations/database-migrations.md` for complete migration guide.
+
 ## Documentation Structure
 See `docs/INDEX.md` for full reference:
 - **getting-started/**: Quick setup guides
