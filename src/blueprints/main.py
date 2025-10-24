@@ -102,6 +102,20 @@ def internal_error(error):
     return render_template('errors/500.html'), 500
 
 
+@main_bp.app_errorhandler(400)
+def handle_csrf_error(error):
+    """Handle CSRF token expiration with user-friendly page"""
+    from flask_wtf.csrf import CSRFError
+    
+    # Check if this is a CSRF error
+    if isinstance(error, CSRFError):
+        print(f"⚠️  CSRF token expired or invalid: {error}")
+        return render_template('errors/csrf_error.html'), 400
+    
+    # For other 400 errors, return generic bad request
+    return jsonify({"status": "error", "message": "Bad request"}), 400
+
+
 @main_bp.app_errorhandler(Exception)
 def handle_exception(error):
     """Handle uncaught exceptions in production"""

@@ -1,22 +1,3 @@
-"""Maintenance script: Normalize password_hash nullability for legacy databases.
-
-Purpose:
-    """\n    ⚠️ DEPRECATED: SQLite support has been removed. Use PostgreSQL with Alembic migrations.\n    \n    Ensure users.password_hash is nullable to support OAuth-only accounts.\n    Older Postgres schemas may have `users.password_hash` defined as NOT NULL.
-    For OAuth / Google Sign-In users we allow it to be NULL. This script adjusts the schema.
-
-Behavior:
-    - Detects if password_hash is NOT NULL.
-    - For SQLite: Rebuilds table only if necessary (since ALTER COLUMN is limited).
-      Simpler approach: If NOT NULL, but there exist rows with empty string, keep them; we just allow future NULLs.
-      We emulate nullability by creating a new table and copying data.
-    - For Postgres: Executes `ALTER TABLE users ALTER COLUMN password_hash DROP NOT NULL`.
-
-Usage:
-    python scripts/migrations/normalize_password_nullability.py
-
-Idempotent: Safe to run multiple times.
-"""
-
 import os
 import sys
 from contextlib import contextmanager

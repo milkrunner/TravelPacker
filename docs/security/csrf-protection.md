@@ -4,6 +4,8 @@
 
 NikNotes implements **Cross-Site Request Forgery (CSRF)** protection using Flask-WTF to prevent malicious websites from performing unauthorized actions on behalf of authenticated users.
 
+**Token Lifetime:** CSRF tokens expire after **2 hours** to balance security with user experience. Users working on long-form content won't be interrupted, while still maintaining protection against CSRF attacks.
+
 ## What is CSRF?
 
 CSRF is an attack that tricks a user's browser into making unwanted requests to a web application where they're authenticated. For example:
@@ -244,6 +246,33 @@ def public_endpoint():
     # ...
 ```
 
+## User Experience - Token Expiration Handling
+
+When a CSRF token expires (after 2 hours), users see a friendly error page instead of a generic 400 error:
+
+**Error Handler:** `src/blueprints/main.py`
+
+```python
+@main_bp.app_errorhandler(400)
+def handle_csrf_error(error):
+    """Handle CSRF token expiration with user-friendly page"""
+    from flask_wtf.csrf import CSRFError
+    
+    if isinstance(error, CSRFError):
+        print(f"⚠️  CSRF token expired or invalid: {error}")
+        return render_template('errors/csrf_error.html'), 400
+    
+    return jsonify({"status": "error", "message": "Bad request"}), 400
+```
+
+**User-Facing Page:** `templates/errors/csrf_error.html`
+- Clear explanation of what happened
+- One-click "Refresh Page" button
+- Link to home page
+- Expandable details about CSRF protection
+
+This ensures users understand why their action failed and can easily recover without losing their work context.
+
 ## Monitoring & Logging
 
 Monitor CSRF protection effectiveness:
@@ -259,7 +288,7 @@ def log_csrf_error(e):
 
 Track metrics:
 
-- Number of CSRF errors per day
+- Number of CSRF errors per day (distinguish expired vs. invalid)
 - Most common failing endpoints
 - Geographic distribution of errors
 - Pattern of legitimate vs. attack attempts
@@ -272,6 +301,12 @@ Track metrics:
 
 ## Version History
 
+- **v1.1.0** (Oct 2025): Enhanced user experience
+  - Increased CSRF token lifetime to 2 hours (from 1 hour)
+  - Added user-friendly error page for token expiration (`csrf_error.html`)
+  - Implemented custom 400 error handler for CSRF errors
+  - Users can now refresh page easily to get new token
+
 - **v1.0.0** (Oct 2025): Initial CSRF protection implementation
   - Installed Flask-WTF 1.2.1
   - Protected all state-changing endpoints
@@ -280,5 +315,5 @@ Track metrics:
 
 ---
 
-**Status:** ✅ Fully Implemented  
+**Status:** ✅ Fully Implemented with Enhanced UX
 **Last Updated:** October 20, 2025
