@@ -3,7 +3,7 @@ Database configuration and session management
 """
 
 import os
-from sqlalchemy import create_engine, event, text
+from sqlalchemy import create_engine, text
 from sqlalchemy.orm import sessionmaker, scoped_session, declarative_base
 from sqlalchemy.pool import QueuePool
 from dotenv import load_dotenv

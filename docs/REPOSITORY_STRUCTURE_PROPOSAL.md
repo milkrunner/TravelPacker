@@ -20,7 +20,7 @@
 ### 2. **Root Directory Clutter** (19+ items)
 
 - ❌ Mix of app files, config files, and build artifacts
-- ❌ Multiple similar files (`main.py` vs `web_app.py`)
+- ✅ Single web application entry point (`web_app.py`)
 - ❌ Database file in root (`niknotes.db`)
 - ❌ Security reports in root
 
@@ -230,8 +230,7 @@ NikNotes/
 │   ├── redis.conf
 │   └── README.md
 │
-├── web_app.py                     # Application entry point (CURRENT)
-├── main.py                        # CLI entry point (CURRENT)
+├── web_app.py                     # Web application entry point (CURRENT)
 └── requirements.txt               # Python dependencies (CURRENT)
 ```
 

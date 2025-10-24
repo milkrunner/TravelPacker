@@ -5,7 +5,7 @@ Flask-based web interface for the trip packing assistant
 
 import os
 
-from flask import Flask, render_template, request, jsonify, redirect, url_for, send_file, flash, session
+from flask import Flask, render_template, request, jsonify, redirect, url_for, send_file, flash
 from flask_wtf.csrf import CSRFProtect
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
@@ -13,7 +13,6 @@ from flask_talisman import Talisman
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user
 from datetime import datetime
 from dotenv import load_dotenv
-from pydantic import ValidationError
 from src.services.trip_service import TripService
 from src.services.ai_service import AIService
 from src.services.packing_list_service import PackingListService
@@ -22,13 +21,26 @@ from src.services.oauth_service import GoogleSignInService
 from src.models.trip import TravelStyle, TransportMethod
 from src.database import init_db, get_session, close_session
 from src.database.models import User as DBUser
-from src.validators import (
-    TripCreateRequest, ItemCreateRequest, ItemToggleRequest
-)
-from src.services.audit_service import AuditLogger
 from src.services.sanitization_service import ContentSanitizer
 
 load_dotenv()
+
+# Security: Log sanitization utility to prevent log injection attacks
+def sanitize_for_log(value):
+    """
+    Sanitize user input for safe logging to prevent log injection attacks.
+    Removes newlines, carriage returns, tabs, and other control characters.
+    
+    Args:
+        value: Any value to sanitize (typically string from user input)
+    
+    Returns:
+        Sanitized value safe for logging
+    """
+    if not isinstance(value, str):
+        return value
+    # Remove newlines, carriage returns, tabs, and other control characters
+    return value.replace('\n', '').replace('\r', '').replace('\t', ' ').replace('\x00', '')
 
 app = Flask(__name__)
 
@@ -648,13 +660,16 @@ def csp_report():
             'ip_address': get_remote_address(),
         }
         
+        # Sanitize all string values to prevent log injection
+        sanitized_details = {k: sanitize_for_log(v) for k, v in violation_details.items()}
+        
         # Log to application logger (configure logging for production)
         app.logger.warning(
-            f"CSP Violation Detected: {violation_details['violated_directive']} | "
-            f"Blocked: {violation_details['blocked_uri']} | "
-            f"Page: {violation_details['document_uri']} | "
-            f"Source: {violation_details['source_file']}:{violation_details['line_number']} | "
-            f"IP: {violation_details['ip_address']}"
+            f"CSP Violation Detected: {sanitized_details['violated_directive']} | "
+            f"Blocked: {sanitized_details['blocked_uri']} | "
+            f"Page: {sanitized_details['document_uri']} | "
+            f"Source: {sanitized_details['source_file']}:{sanitized_details['line_number']} | "
+            f"IP: {sanitized_details['ip_address']}"
         )
         
         # In production, you might want to:
@@ -769,8 +784,8 @@ def logout():
     
     logout_user()
     
-    # Log logout for security audit
-    print(f'User logout: {username} (ID: {user_id}) from IP: {request.remote_addr}')
+    # Log logout for security audit (sanitize username to prevent log injection)
+    print(f'User logout: {sanitize_for_log(username)} (ID: {user_id}) from IP: {request.remote_addr}')
     
     flash('You have been logged out successfully.', 'info')
     return redirect(url_for('index'))
