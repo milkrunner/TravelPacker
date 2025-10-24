@@ -91,7 +91,7 @@ See [DARK_MODE.md](docs/DARK_MODE.md) for detailed dark mode documentation.
 - 🚀 **Scalable**: PostgreSQL connection pooling for 100+ users
 - 🧠 **Smart**: Google Gemini AI for personalized suggestions
 - 🎯 **Organized**: Category-based packing lists with progress tracking
-- 💪 **Reliable**: Database persistence with automatic migrations
+- 💪 **Reliable**: Database persistence with Alembic migrations for safe schema evolution
 - 🔄 **Efficient**: Cached AI suggestions reduce API costs
 - 📄 **Exportable**: Professional PDF export for printing and sharing
 - 🌙 **Customizable**: Dark mode for comfortable viewing
@@ -211,6 +211,7 @@ Complete documentation is available in the [`docs/`](docs/) folder:
 
 - **[Docker Deployment](docs/operations/docker-deployment.md)** - Production deployment
 - **[Health Checks](docs/operations/health-checks.md)** - Monitoring guide
+- **[Database Migrations](docs/operations/database-migrations.md)** - Alembic migration guide
 
 See [docs/INDEX.md](docs/INDEX.md) for complete documentation index.
 

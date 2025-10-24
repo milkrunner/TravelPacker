@@ -20,6 +20,7 @@ pydantic==2.12.3
 # Database
 sqlalchemy==2.0.44
 psycopg2-binary==2.9.9
+alembic==1.14.0  # Database migrations
 
 # Performance & Caching
 redis==5.3.1
