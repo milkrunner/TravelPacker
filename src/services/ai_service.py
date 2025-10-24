@@ -3,7 +3,7 @@ AI service for generating packing suggestions with Redis caching
 """
 
 import os
-from typing import List, Dict, Any
+from typing import List, Dict, Any, TYPE_CHECKING
 from dotenv import load_dotenv
 from src.models.trip import Trip
 from src.services.cache_service import get_cache_service
@@ -17,6 +17,8 @@ try:
     GEMINI_AVAILABLE = True
 except ImportError:
     GEMINI_AVAILABLE = False
+    if TYPE_CHECKING:
+        import google.generativeai as genai
 
 
 class AIService:
@@ -83,8 +85,8 @@ class AIService:
                 print(f"Error generating AI suggestions: {e}")
                 suggestions = self._get_mock_suggestions(trip)
         
-        # Cache the results for 24 hours
-        self.cache.set_ai_suggestions(cache_data, suggestions, ttl_hours=24)
+        # Cache the results for 24 hours with trip_id mapping for easy invalidation
+        self.cache.set_ai_suggestions(cache_data, suggestions, ttl_hours=24, trip_id=trip.id)
         
         return suggestions
     

@@ -27,10 +27,10 @@ class NullCacheService:
     def set(self, key: str, value: str, ttl_hours: int = 24) -> bool:
         return False
 
-    def get_ai_suggestions(self, trip_data: Dict[str, Any]) -> Optional[List[Dict]]:
+    def get_ai_suggestions(self, trip_data: Dict[str, Any]) -> Optional[List[str]]:
         return None
 
-    def set_ai_suggestions(self, trip_data: Dict[str, Any], suggestions: List[Dict], ttl_hours: int = 24) -> bool:
+    def set_ai_suggestions(self, trip_data: Dict[str, Any], suggestions: List[str], ttl_hours: int = 24, trip_id: Optional[str] = None) -> bool:
         return False
 
     def get_trip(self, trip_id: str) -> Optional[Dict]:
@@ -40,6 +40,9 @@ class NullCacheService:
         return False
 
     def invalidate_trip(self, trip_id: str) -> bool:
+        return False
+    
+    def invalidate_ai_suggestions_for_trip(self, trip_id: str) -> bool:
         return False
 
     def get_stats(self) -> Dict[str, Any]:
@@ -118,7 +121,7 @@ class CacheService:
             print(f"Cache write error: {e}")
             return False
     
-    def get_ai_suggestions(self, trip_data: Dict[str, Any]) -> Optional[List[Dict]]:
+    def get_ai_suggestions(self, trip_data: Dict[str, Any]) -> Optional[List[str]]:
         """Get cached AI packing suggestions"""
         if not self.enabled or self.redis_client is None:
             return None
@@ -136,16 +139,23 @@ class CacheService:
     def set_ai_suggestions(
         self, 
         trip_data: Dict[str, Any], 
-        suggestions: List[Dict],
-        ttl_hours: int = 24
+        suggestions: List[str],
+        ttl_hours: int = 24,
+        trip_id: Optional[str] = None
     ) -> bool:
-        """Cache AI packing suggestions with TTL"""
+        """Cache AI packing suggestions with TTL and optional trip_id mapping"""
         if not self.enabled or self.redis_client is None:
             return False
         try:  # type: ignore[attr-defined]
             key = self._generate_key("ai_suggestions", trip_data)
             value = json.dumps(suggestions)
             self.redis_client.setex(key, timedelta(hours=ttl_hours), value)  # type: ignore[attr-defined]
+            
+            # Store mapping from trip_id to cache key for easy invalidation
+            if trip_id:
+                mapping_key = f"ai_trip_mapping:{trip_id}"
+                self.redis_client.setex(mapping_key, timedelta(hours=ttl_hours), key)  # type: ignore[attr-defined]
+            
             print(f"💾 Cached AI suggestions (TTL: {ttl_hours}h)")
             return True
         except RedisError as e:
@@ -191,6 +201,25 @@ class CacheService:
             return True
         except RedisError as e:
             print(f"Cache delete error: {e}")
+            return False
+    
+    def invalidate_ai_suggestions_for_trip(self, trip_id: str) -> bool:
+        """Invalidate AI suggestions cache for a specific trip"""
+        if not self.enabled or self.redis_client is None:
+            return False
+        try:  # type: ignore[attr-defined]
+            # Delete the mapping from trip_id to cache key
+            mapping_key = f"ai_trip_mapping:{trip_id}"
+            cache_key = self.redis_client.get(mapping_key)  # type: ignore[attr-defined]
+            
+            if cache_key:
+                self.redis_client.delete(cache_key)  # type: ignore[attr-defined]
+                self.redis_client.delete(mapping_key)  # type: ignore[attr-defined]
+                print(f"🗑️  Invalidated AI suggestions cache for trip {trip_id}")
+                return True
+            return False
+        except RedisError as e:
+            print(f"Cache invalidation error: {e}")
             return False
     
     def get_stats(self) -> Dict[str, Any]:
