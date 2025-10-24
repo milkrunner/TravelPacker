@@ -105,15 +105,25 @@ def new_trip():
             special_notes=sanitized_notes
         )
         
+        # Fetch weather data for the trip (always, regardless of AI generation)
+        if trip.id:
+            from src.services.weather_service import get_weather_service
+            weather_service = get_weather_service()
+            if weather_service.enabled:
+                weather_summary = weather_service.get_weather_summary(
+                    trip.destination,
+                    trip.start_date,
+                    trip.end_date
+                )
+                if weather_summary:
+                    trip_service.update_trip(trip.id, weather_conditions=weather_summary)
+                    trip.weather_conditions = weather_summary
+        
         # Generate AI suggestions only if requested
         use_ai = data.get('use_ai_suggestions') == 'on'
         if use_ai and trip.id:
             assert packing_service is not None, "PackingListService not initialized"
             suggestions = packing_service.generate_suggestions(trip)
-            
-            # Persist weather data if it was fetched
-            if trip.weather_conditions:
-                trip_service.update_trip(trip.id, weather_conditions=trip.weather_conditions)
             
             # Create packing items from suggestions
             for suggestion in suggestions:
