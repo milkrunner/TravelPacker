@@ -66,21 +66,54 @@ def _apply_rate_limits(app, config):
     
     from src.extensions import limiter
     
-    # Define rate limits for specific endpoints
-    rate_limits = {
-        'trips.new_trip': '20 per hour',
-        'trips.delete_trip': '20 per hour',
-        'api.toggle_item': '100 per hour',
-        'api.add_item': '50 per hour',
-        'api.delete_item': '100 per hour',
+    # Define rate limits for endpoints by sensitivity level
+    
+    # CRITICAL: Destructive operations (delete, regenerate)
+    critical_limits = {
+        'trips.delete_trip': '5 per hour',  # Very strict - deletes data
+        'api.delete_item': '10 per hour',   # Strict - deletes items
+        'api.regenerate_suggestions': '3 per hour',  # Strict - expensive AI operation
     }
     
-    for endpoint, limit in rate_limits.items():
+    # SENSITIVE: Authentication and account operations
+    sensitive_limits = {
+        'auth.login': '10 per hour',  # Prevent brute-force
+        'auth.register': '5 per hour',  # Prevent spam accounts
+        'auth.logout': '20 per hour',
+    }
+    
+    # MODERATE: Write operations
+    moderate_limits = {
+        'trips.new_trip': '20 per hour',
+        'api.add_item': '50 per hour',
+        'api.save_template': '10 per hour',
+    }
+    
+    # STANDARD: Read operations
+    standard_limits = {
+        'api.toggle_item': '100 per hour',
+    }
+    
+    # Apply all limits
+    all_limits = {
+        **critical_limits,
+        **sensitive_limits,
+        **moderate_limits,
+        **standard_limits
+    }
+    
+    for endpoint, limit in all_limits.items():
         try:
             limiter.limit(limit)(app.view_functions[endpoint])
-            print(f"  Applied rate limit '{limit}' to {endpoint}")
+            category = (
+                'CRITICAL' if endpoint in critical_limits else
+                'SENSITIVE' if endpoint in sensitive_limits else
+                'MODERATE' if endpoint in moderate_limits else
+                'STANDARD'
+            )
+            print(f"  [{category}] Applied rate limit '{limit}' to {endpoint}")
         except KeyError:
-            # Endpoint not found, skip
+            # Endpoint not found, skip silently
             pass
 
 

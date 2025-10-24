@@ -2,17 +2,21 @@
 Trips blueprint - Trip management routes
 """
 
+from typing import TYPE_CHECKING, Optional
 from flask import Blueprint, render_template, request, redirect, url_for, flash, send_file
 from flask_login import login_required, current_user
 from src.services.sanitization_service import ContentSanitizer
 from src.models.trip import TravelStyle, TransportMethod
 
+if TYPE_CHECKING:
+    from src.services.trip_service import TripService
+    from src.services.packing_list_service import PackingListService
 
 trips_bp = Blueprint('trips', __name__)
 
 # Services will be initialized in factory
-trip_service = None
-packing_service = None
+trip_service: Optional['TripService'] = None
+packing_service: Optional['PackingListService'] = None
 
 
 def init_services(service_container):
@@ -88,6 +92,7 @@ def new_trip():
             flash('Start date and end date are required', 'error')
             return redirect(url_for('trips.new_trip'))
         
+        assert trip_service is not None, "TripService not initialized"
         trip = trip_service.create_trip(
             destination=sanitized_destination,
             start_date=start_date,
@@ -103,6 +108,7 @@ def new_trip():
         # Generate AI suggestions only if requested
         use_ai = data.get('use_ai_suggestions') == 'on'
         if use_ai and trip.id:
+            assert packing_service is not None, "PackingListService not initialized"
             suggestions = packing_service.generate_suggestions(trip)
             
             # Persist weather data if it was fetched
@@ -137,6 +143,7 @@ def new_trip():
 @trips_bp.route('/<trip_id>')
 def view_trip(trip_id):
     """View trip details and packing list"""
+    assert trip_service is not None and packing_service is not None, "Services not initialized"
     trip = trip_service.get_trip(trip_id)
     if not trip:
         flash('Trip not found', 'error')
@@ -174,6 +181,7 @@ def export_trip_pdf(trip_id):
     """Export trip packing list as PDF"""
     from src.services.pdf_service import PDFService
     
+    assert trip_service is not None and packing_service is not None, "Services not initialized"
     trip = trip_service.get_trip(trip_id)
     if not trip:
         flash('Trip not found or access denied', 'error')
@@ -201,6 +209,7 @@ def export_trip_pdf(trip_id):
 @login_required
 def save_as_template(trip_id):
     """Save a trip as a template"""
+    assert trip_service is not None, "TripService not initialized"
     trip = trip_service.get_trip(trip_id)
     if not trip:
         flash('Trip not found or access denied', 'error')
@@ -226,6 +235,7 @@ def save_as_template(trip_id):
 @login_required
 def create_from_template(template_id):
     """Create a new trip from a template"""
+    assert trip_service is not None and packing_service is not None, "Services not initialized"
     template = trip_service.get_trip(template_id)
     if not template or not template.is_template:
         flash('Template not found or access denied', 'error')
@@ -290,7 +300,21 @@ def create_from_template(template_id):
 @trips_bp.route('/<trip_id>/delete', methods=['POST'])
 @login_required
 def delete_trip(trip_id):
-    """Delete a trip"""
+    """Delete a trip (destructive operation)"""
+    from src.utils.security_utils import check_security_threats, get_ip_address
+    
+    assert trip_service is not None, "TripService not initialized"
+    
+    # Check for security threats
+    threat_response = check_security_threats()
+    if threat_response:
+        return threat_response
+    
+    # Log destructive operation
+    ip = get_ip_address()
+    user_id = current_user.id if current_user.is_authenticated else 'anonymous'
+    print(f"🗑️  DELETE TRIP: trip={trip_id} by user={user_id} from {ip}")
+    
     try:
         success = trip_service.delete_trip(trip_id)
         
