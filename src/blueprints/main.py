@@ -2,6 +2,7 @@
 Main routes blueprint
 """
 
+from typing import Optional
 from flask import Blueprint, render_template, jsonify, request
 from flask_login import current_user
 from src.services.trip_service import TripService
@@ -10,7 +11,7 @@ from src.services.trip_service import TripService
 main_bp = Blueprint('main', __name__)
 
 # Service will be initialized in factory
-trip_service = None
+trip_service: Optional[TripService] = None
 
 
 def init_services(service_container):
@@ -27,6 +28,7 @@ def index():
         return render_template('index.html', trips=[], templates=[], show_landing=True)
     
     # Show user's trips and templates
+    assert trip_service is not None, "TripService not initialized"
     all_trips = trip_service.list_trips(user_id=current_user.id)
     trips = [t for t in all_trips if not t.is_template]
     templates = [t for t in all_trips if t.is_template]
@@ -100,6 +102,20 @@ def internal_error(error):
     """Handle 500 errors with custom page"""
     print(f"Internal error: {error}")
     return render_template('errors/500.html'), 500
+
+
+@main_bp.app_errorhandler(400)
+def handle_csrf_error(error):
+    """Handle CSRF token expiration with user-friendly page"""
+    from flask_wtf.csrf import CSRFError
+    
+    # Check if this is a CSRF error
+    if isinstance(error, CSRFError):
+        print(f"⚠️  CSRF token expired or invalid: {error}")
+        return render_template('errors/csrf_error.html'), 400
+    
+    # For other 400 errors, return generic bad request
+    return jsonify({"status": "error", "message": "Bad request"}), 400
 
 
 @main_bp.app_errorhandler(Exception)

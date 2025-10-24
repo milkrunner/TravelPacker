@@ -107,3 +107,18 @@ def get_session():
 def close_session():
     """Close the current session"""
     Session.remove()
+
+
+def test_connection():
+    """Test database connectivity
+    
+    Returns:
+        bool: True if database connection is healthy, False otherwise
+    """
+    try:
+        with engine.connect() as conn:
+            conn.execute(text('SELECT 1'))
+        return True
+    except Exception as e:
+        print(f"Database connection test failed: {e}")
+        return False

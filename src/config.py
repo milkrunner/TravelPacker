@@ -41,6 +41,9 @@ class Config:
     SESSION_COOKIE_HTTPONLY: bool = True
     SESSION_COOKIE_SAMESITE: str = 'Lax'
     
+    # CSRF Protection
+    WTF_CSRF_TIME_LIMIT: int = 7200  # 2 hours (in seconds)
+    
     @classmethod
     def init_from_env(cls):
         """Initialize configuration from environment variables"""

@@ -1,0 +1,152 @@
+{% extends "base.html" %}
+
+{% block title %}Security Token Expired - NikNotes{% endblock %}
+
+{% block content %}
+<div class="error-container">
+    <div class="error-icon">🔐</div>
+    <h1>Security Token Expired</h1>
+    <p class="error-message">
+        Your security token has expired. This happens when a page is left open for more than an hour.
+    </p>
+    <p class="error-detail">
+        Don't worry - your data is safe! Simply refresh the page to continue.
+    </p>
+    
+    <div class="error-actions">
+        <button onclick="window.location.reload()" class="btn btn-primary">
+            🔄 Refresh Page
+        </button>
+        <a href="{{ url_for('main.index') }}" class="btn btn-secondary">
+            🏠 Go to Home
+        </a>
+    </div>
+    
+    <div class="error-info">
+        <details>
+            <summary>Why did this happen?</summary>
+            <p>
+                For your security, we use CSRF tokens that expire after 1 hour. This protects you from 
+                cross-site request forgery attacks. When you leave a page open for too long, the token 
+                expires and needs to be refreshed.
+            </p>
+        </details>
+    </div>
+</div>
+
+<style>
+.error-container {
+    max-width: 600px;
+    margin: 4rem auto;
+    padding: 2rem;
+    text-align: center;
+}
+
+.error-icon {
+    font-size: 4rem;
+    margin-bottom: 1rem;
+}
+
+.error-container h1 {
+    color: var(--text-color);
+    margin-bottom: 1rem;
+}
+
+.error-message {
+    font-size: 1.1rem;
+    color: var(--text-secondary);
+    margin-bottom: 1rem;
+}
+
+.error-detail {
+    color: var(--text-secondary);
+    margin-bottom: 2rem;
+}
+
+.error-actions {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+    margin-bottom: 2rem;
+}
+
+.error-actions .btn {
+    padding: 0.75rem 1.5rem;
+    border-radius: var(--border-radius);
+    text-decoration: none;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.error-actions .btn-primary {
+    background: var(--primary-color);
+    color: white;
+    border: none;
+}
+
+.error-actions .btn-primary:hover {
+    background: var(--primary-hover);
+    transform: translateY(-1px);
+}
+
+.error-actions .btn-secondary {
+    background: var(--card-bg);
+    color: var(--text-color);
+    border: 1px solid var(--border-color);
+}
+
+.error-actions .btn-secondary:hover {
+    background: var(--hover-bg);
+    transform: translateY(-1px);
+}
+
+.error-info {
+    margin-top: 2rem;
+    padding-top: 2rem;
+    border-top: 1px solid var(--border-color);
+}
+
+.error-info details {
+    text-align: left;
+    max-width: 500px;
+    margin: 0 auto;
+}
+
+.error-info summary {
+    cursor: pointer;
+    color: var(--text-secondary);
+    font-weight: 500;
+    padding: 0.5rem;
+    user-select: none;
+}
+
+.error-info summary:hover {
+    color: var(--primary-color);
+}
+
+.error-info p {
+    margin-top: 1rem;
+    padding: 1rem;
+    background: var(--card-bg);
+    border-radius: var(--border-radius);
+    color: var(--text-secondary);
+    line-height: 1.6;
+}
+
+@media (max-width: 600px) {
+    .error-container {
+        padding: 1rem;
+        margin: 2rem auto;
+    }
+    
+    .error-actions {
+        flex-direction: column;
+    }
+    
+    .error-actions .btn {
+        width: 100%;
+    }
+}
+</style>
+{% endblock %}
