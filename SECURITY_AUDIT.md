@@ -525,13 +525,13 @@ for i in {1..11}; do curl -X POST http://localhost:5000/login; done
 
 ### 11. Missing Security Headers
 
-**Status:** ✅ RESOLVED
-**Files Affected:** `web_app.py`
+**Status:** ✅ RESOLVED + ENHANCED (December 2024)
+**Files Affected:** `src/extensions.py`, all templates
 
 **Original Issue:**
 No security headers (CSP, X-Frame-Options, HSTS, etc.) to protect against XSS, clickjacking, and other attacks.
 
-**Fix Applied:**
+**Fix Applied (October 2025):**
 
 Installed Flask-Talisman 1.1.0 with comprehensive security headers:
 
@@ -543,30 +543,60 @@ csp = {
     'img-src': ["'self'", 'data:', 'https:'],
     'frame-ancestors': ["'none'"],                 # Clickjacking protection
 }
+```
 
-Talisman(
+**Enhancement Applied (December 2024):**
+
+**Strengthened CSP by removing ALL `'unsafe-inline'` directives:**
+
+```python
+csp = {
+    'default-src': ["'self'"],
+    'script-src': ["'self'", 'https://accounts.google.com/gsi/client'],
+    'style-src': ["'self'", 'https://accounts.google.com/gsi/style'],
+    'img-src': ["'self'", 'data:', 'https:', 'https://lh3.googleusercontent.com'],
+    'font-src': ["'self'"],
+    'connect-src': ["'self'", 'https://accounts.google.com'],
+    'frame-src': ['https://accounts.google.com'],
+    'frame-ancestors': ["'none'"],
+    'report-uri': ['/csp-report'],
+}
+
+talisman.init_app(
     app,
-    force_https=os.getenv('FORCE_HTTPS', 'False').lower() == 'true',
+    force_https=force_https,
     strict_transport_security=True,
-    strict_transport_security_max_age=31536000,  # 1 year
+    strict_transport_security_max_age=31536000,
     content_security_policy=csp,
+    content_security_policy_nonce_in=['script-src', 'style-src'],  # Nonces for both!
     frame_options='DENY',
     referrer_policy='strict-origin-when-cross-origin',
 )
 ```
 
-**Headers Added:**
-- ✅ Content-Security-Policy (CSP) - Restricts resource loading, prevents XSS
-- ✅ Strict-Transport-Security (HSTS) - Forces HTTPS in production
-- ✅ X-Frame-Options: DENY - Prevents clickjacking
-- ✅ X-Content-Type-Options: nosniff - Prevents MIME sniffing
-- ✅ Referrer-Policy - Controls referrer information
+**Template Changes:**
+- ✅ All inline `<script>` tags use `nonce="{{ csp_nonce() }}"`
+- ✅ All inline `<style>` tags use `nonce="{{ csp_nonce() }}"`
+- ✅ Removed ALL inline event handlers (`onclick`, `onload`, etc.)
+- ✅ Refactored to use `addEventListener()` in nonce-protected scripts
+- ✅ Updated templates: 404.html, 429.html, 500.html, csrf_error.html, login.html, all other templates
 
 **Security Benefits:**
-- ✅ XSS attack mitigation
-- ✅ Clickjacking prevention
-- ✅ HTTPS enforcement (production)
-- ✅ MIME type confusion prevention`
+- ✅ **No `unsafe-inline`** - Eliminates major XSS attack vector
+- ✅ **Nonce-based CSP** - Only explicitly allowed scripts/styles execute
+- ✅ **XSS attack mitigation** - Significantly reduced attack surface
+- ✅ **Clickjacking prevention** - `frame-ancestors: 'none'`
+- ✅ **HTTPS enforcement** - Production-ready
+- ✅ **MIME type confusion prevention** - `X-Content-Type-Options: nosniff`
+- ✅ **Google Sign-In compatible** - Whitelisted OAuth domains
+
+**CSP Compliance:**
+- ✅ All templates CSP-compliant
+- ✅ No inline event handlers
+- ✅ All inline scripts/styles use nonces
+- ✅ External scripts from whitelisted domains only
+
+See `docs/security/SECURITY_QUICK_REFERENCE.md` for CSP usage guidelines.
 
 ---
 

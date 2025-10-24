@@ -27,7 +27,7 @@
         </svg>
         Go Home
       </a>
-      <button onclick="location.reload()" class="btn btn-secondary">
+      <button id="reloadBtn" class="btn btn-secondary">
         <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <polyline points="23 4 23 10 17 10"></polyline>
           <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path>
@@ -48,7 +48,7 @@
   </div>
 </div>
 
-<style>
+<style nonce="{{ csp_nonce() }}">
   .error-container {
     display: flex;
     justify-content: center;
@@ -191,4 +191,15 @@
     color: #9ca3af;
   }
 </style>
+
+<script nonce="{{ csp_nonce() }}">
+  document.addEventListener('DOMContentLoaded', function() {
+    const reloadBtn = document.getElementById('reloadBtn');
+    if (reloadBtn) {
+      reloadBtn.addEventListener('click', function() {
+        location.reload();
+      });
+    }
+  });
+</script>
 {% endblock %}
