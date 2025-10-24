@@ -228,14 +228,10 @@ def track_authentication_attempt(success: bool):
                 from src.services.audit_service import AuditLogger
                 AuditLogger.log_security_event(
                     event_type='brute_force_detected',
-                    severity='high',
-                    details={
-                        'ip_address': ip,
-                        'failed_attempts': security_monitor.max_failed_attempts
-                    },
-                    ip_address=ip
+                    action='ip_blocked',
+                    severity='high'
                 )
-            except ImportError:
+            except (ImportError, AttributeError):
                 pass
     else:
         security_monitor.record_successful_login(ip)
