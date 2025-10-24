@@ -21,6 +21,17 @@ All business logic lives in `src/services/`. Services are stateless and injected
 
 **Pattern**: Services inject dependencies via constructor. Check `use_database` flags to support both DB and in-memory modes.
 
+### Security Utilities
+Advanced security monitoring in `src/utils/security_utils.py`:
+
+- **SecurityMonitor** - Brute-force detection, anomaly detection, IP tracking
+- **check_security_threats()** - Pre-request validation for sensitive endpoints
+- **track_authentication_attempt()** - Failed login tracking (5 max, 300s window)
+- **get_user_identifier()** - Per-user + per-IP rate limiting key
+- **is_ip_suspicious()** - IP reputation check for blocked addresses
+
+**Pattern**: Call `check_security_threats()` at start of CRITICAL/SENSITIVE endpoints. See `docs/security/SECURITY_QUICK_REFERENCE.md`.
+
 ### Repository Pattern
 Database access isolated in `src/database/repository.py`:
 - **TripRepository** - Trip/Traveler persistence with eager loading (`lazy='selectin'`)
@@ -128,14 +139,29 @@ WEATHER_API_KEY=<your-key>  # Optional - weather disabled without it
 4. **Input Sanitization** (Bleach) - Strict for names/titles, rich for notes (limited tags)
 5. **Input Validation** (Pydantic) - `src/validators.py` schemas for all user input
 
-**Key file**: `SECURITY_AUDIT.md` tracks all 11 vulnerabilities fixed (100% resolved).
+**Key file**: `SECURITY_AUDIT.md` tracks all 11 vulnerabilities fixed (100% resolved + enhanced).
 
-### Rate Limits (See `web_app.py`)
-- `/trip/new`: 20/hour
-- `/trip/<id>/delete`: 20/hour  
-- `/api/item/<id>/toggle`: 100/hour
-- `/api/trip/<id>/item`: 50/hour
-- Default: 200/day, 50/hour
+### Tiered Rate Limits (See `src/factory.py`)
+
+**CRITICAL Endpoints** (Highest Protection):
+- `delete_trip`: 5/hour - Destructive data operation
+- `delete_item`: 10/hour - Item deletion
+- `regenerate_suggestions`: 3/hour - Expensive AI operation
+
+**SENSITIVE Endpoints**:
+- `login`: 10/hour - Prevents credential stuffing
+- `register`: 5/hour - Prevents account spam
+- `logout`: 20/hour - Normal usage
+
+**MODERATE Endpoints**:
+- `new_trip`: 20/hour - Trip creation
+- `add_item`: 50/hour - Item addition
+- `save_template`: 10/hour - Template creation
+
+**STANDARD Endpoints**:
+- `toggle_item`: 100/hour - High-frequency interaction
+
+**Rate Limiting**: Per-user + per-IP tracking. Authenticated users get separate limits per device/location.
 
 ### Content Sanitization Pattern
 ```python

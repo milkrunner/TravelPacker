@@ -109,6 +109,19 @@ def add_item(trip_id):
 @api_bp.route('/item/<item_id>', methods=['DELETE'])
 def delete_item(item_id):
     """Delete a packing item"""
+    from src.utils.security_utils import check_security_threats, get_ip_address
+    from flask_login import current_user
+    
+    # Check for security threats
+    threat_response = check_security_threats()
+    if threat_response:
+        return threat_response
+    
+    # Log sensitive operation
+    ip = get_ip_address()
+    user_id = current_user.id if current_user.is_authenticated else 'anonymous'
+    print(f"🗑️  DELETE operation: item={item_id} by user={user_id} from {ip}")
+    
     success = packing_service.delete_item(item_id)
     
     if success:
@@ -133,7 +146,20 @@ def reorder_items(trip_id):
 
 @api_bp.route('/trip/<trip_id>/regenerate', methods=['POST'])
 def regenerate_suggestions(trip_id):
-    """Regenerate AI suggestions for a trip"""
+    """Regenerate AI suggestions for a trip (expensive AI operation)"""
+    from src.utils.security_utils import check_security_threats, get_ip_address
+    from flask_login import current_user
+    
+    # Check for security threats
+    threat_response = check_security_threats()
+    if threat_response:
+        return threat_response
+    
+    # Log expensive operation
+    ip = get_ip_address()
+    user_id = current_user.id if current_user.is_authenticated else 'anonymous'
+    print(f"🤖 REGENERATE AI: trip={trip_id} by user={user_id} from {ip}")
+    
     trip = trip_service.get_trip(trip_id)
     if not trip:
         return jsonify({'success': False, 'error': 'Trip not found'}), 404
