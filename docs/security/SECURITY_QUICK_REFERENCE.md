@@ -2,7 +2,107 @@
 
 ---
 
-## 🚨 Before You Code
+## �️ Content Security Policy (CSP)
+
+### Overview
+
+**Strict CSP with nonce-based inline scripts and styles** - NO `unsafe-inline` directives.
+
+### CSP Configuration
+
+Located in `src/extensions.py`:
+
+```python
+csp = {
+    'default-src': ["'self'"],
+    'script-src': ["'self'", 'https://accounts.google.com/gsi/client'],
+    'style-src': ["'self'", 'https://accounts.google.com/gsi/style'],
+    'img-src': ["'self'", 'data:', 'https:', 'https://lh3.googleusercontent.com'],
+    'font-src': ["'self'"],
+    'connect-src': ["'self'", 'https://accounts.google.com'],
+    'frame-src': ['https://accounts.google.com'],
+    'frame-ancestors': ["'none'"],
+    'report-uri': ['/csp-report'],
+}
+```
+
+**Key Features:**
+
+- ✅ **No `unsafe-inline`** - All inline scripts/styles use nonces
+- ✅ **Nonce-based execution** - Only scripts/styles with valid nonces execute
+- ✅ **Frame protection** - `frame-ancestors: 'none'` prevents clickjacking
+- ✅ **External integrations** - Google Sign-In whitelisted
+
+### Using Nonces in Templates
+
+**Always use `csp_nonce()` for inline scripts and styles:**
+
+```html
+<!-- Inline script with nonce -->
+<script nonce="{{ csp_nonce() }}">
+  document.addEventListener("DOMContentLoaded", function () {
+    // Your code here
+  });
+</script>
+
+<!-- Inline style with nonce -->
+<style nonce="{{ csp_nonce() }}">
+  .custom-class {
+    color: blue;
+  }
+</style>
+```
+
+### ❌ NEVER Do This (CSP Violation)
+
+```html
+<!-- NO NONCE - Will be blocked! -->
+<script>
+  alert("This will not work");
+</script>
+
+<!-- Inline event handlers - Will be blocked! -->
+<button onclick="doSomething()">Click</button>
+```
+
+### ✅ Do This Instead
+
+```html
+<!-- With nonce -->
+<script nonce="{{ csp_nonce() }}">
+  document.addEventListener("DOMContentLoaded", function () {
+    const btn = document.getElementById("myBtn");
+    btn.addEventListener("click", function () {
+      doSomething();
+    });
+  });
+</script>
+
+<button id="myBtn">Click</button>
+```
+
+### CSP Compliance Checklist
+
+- [ ] All inline `<script>` tags have `nonce="{{ csp_nonce() }}"`
+- [ ] All inline `<style>` tags have `nonce="{{ csp_nonce() }}"`
+- [ ] No `onclick`, `onload`, `onerror` or other inline event handlers
+- [ ] All event handlers use `addEventListener()` in nonce-protected scripts
+- [ ] External scripts are loaded from whitelisted domains only
+
+### Testing CSP
+
+1. **Open browser console** when loading pages
+2. **Check for CSP violations** - Look for errors like:
+
+   ```text
+   Refused to execute inline script because it violates CSP directive
+   ```
+
+3. **Fix violations** by adding nonces or moving code to external files
+
+---
+
+## �🚨 Before You Code
 
 **Ask yourself:**
 

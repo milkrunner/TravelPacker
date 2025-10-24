@@ -56,8 +56,8 @@ def init_extensions(app):
     # Security Headers (Talisman)
     csp = {
         'default-src': ["'self'"],
-        'script-src': ["'self'", "'unsafe-inline'", 'https://accounts.google.com/gsi/client'],
-        'style-src': ["'self'", "'unsafe-inline'", 'https://accounts.google.com/gsi/style'],
+        'script-src': ["'self'", 'https://accounts.google.com/gsi/client'],
+        'style-src': ["'self'", 'https://accounts.google.com/gsi/style'],
         'img-src': ["'self'", 'data:', 'https:', 'https://lh3.googleusercontent.com'],
         'font-src': ["'self'"],
         'connect-src': ["'self'", 'https://accounts.google.com'],
@@ -73,7 +73,7 @@ def init_extensions(app):
         strict_transport_security=True,
         strict_transport_security_max_age=31536000,
         content_security_policy=csp,
-        content_security_policy_nonce_in=['script-src'],
+        content_security_policy_nonce_in=['script-src', 'style-src'],
         frame_options='DENY',
         referrer_policy='strict-origin-when-cross-origin',
     )

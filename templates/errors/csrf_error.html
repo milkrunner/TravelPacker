@@ -14,7 +14,7 @@
     </p>
     
     <div class="error-actions">
-        <button onclick="window.location.reload()" class="btn btn-primary">
+        <button id="refreshBtn" class="btn btn-primary">
             🔄 Refresh Page
         </button>
         <a href="{{ url_for('main.index') }}" class="btn btn-secondary">
@@ -34,7 +34,7 @@
     </div>
 </div>
 
-<style>
+<style nonce="{{ csp_nonce() }}">
 .error-container {
     max-width: 600px;
     margin: 4rem auto;
@@ -149,4 +149,15 @@
     }
 }
 </style>
+
+<script nonce="{{ csp_nonce() }}">
+  document.addEventListener('DOMContentLoaded', function() {
+    const refreshBtn = document.getElementById('refreshBtn');
+    if (refreshBtn) {
+      refreshBtn.addEventListener('click', function() {
+        window.location.reload();
+      });
+    }
+  });
+</script>
 {% endblock %}
