@@ -5,6 +5,7 @@ Tests for database repository
 import pytest
 from src.database import init_db, engine, Base
 from src.database.repository import TripRepository, PackingItemRepository
+from src.database.models import User  # Import User to ensure it's in metadata
 from src.models.trip import Trip, TravelStyle, TransportMethod
 from src.models.packing_item import PackingItem, ItemCategory
 
@@ -12,14 +13,17 @@ from src.models.packing_item import PackingItem, ItemCategory
 @pytest.fixture(scope="function")
 def setup_database():
     """Setup test database before each test"""
-    # Create tables
+    # Import all models to ensure they're registered with Base.metadata
+    from src.database.models import User, Trip as DBTrip, PackingItem as DBPackingItem
+    
+    # Create tables (includes users table now)
     Base.metadata.create_all(bind=engine)
     yield
     # Drop tables after test
     Base.metadata.drop_all(bind=engine)
 
 
-def test_trip_repository_create(setup_database):
+def test_trip_repository_create(setup_database, test_user):
     """Test creating a trip in database"""
     trip = Trip(
         destination="Tokyo, Japan",
@@ -30,14 +34,14 @@ def test_trip_repository_create(setup_database):
         transportation=TransportMethod.FLIGHT
     )
     
-    saved_trip = TripRepository.create(trip, "test_user")
+    saved_trip = TripRepository.create(trip, test_user.id)
     
     assert saved_trip.id is not None
     assert saved_trip.destination == "Tokyo, Japan"
     assert saved_trip.duration == 10
 
 
-def test_trip_repository_get(setup_database):
+def test_trip_repository_get(setup_database, test_user):
     """Test retrieving a trip from database"""
     trip = Trip(
         destination="Paris, France",
@@ -46,29 +50,32 @@ def test_trip_repository_get(setup_database):
         travelers=["Adult"]
     )
     
-    saved_trip = TripRepository.create(trip, "test_user")
+    saved_trip = TripRepository.create(trip, test_user.id)
+    assert saved_trip.id is not None
     retrieved_trip = TripRepository.get(saved_trip.id)
     
     assert retrieved_trip is not None
     assert retrieved_trip.destination == "Paris, France"
 
 
-def test_trip_repository_list(setup_database):
+def test_trip_repository_list(setup_database, test_user):
     """Test listing all trips"""
+    user_id = test_user.id  # Store ID to avoid detached instance issues
     trip1 = Trip(destination="London", start_date="2025-11-01", end_date="2025-11-03", travelers=["Adult"])
     trip2 = Trip(destination="Rome", start_date="2025-12-01", end_date="2025-12-05", travelers=["Adult"])
     
-    TripRepository.create(trip1, "test_user")
-    TripRepository.create(trip2, "test_user")
+    TripRepository.create(trip1, user_id)
+    TripRepository.create(trip2, user_id)
     
     trips = TripRepository.list_all()
     assert len(trips) == 2
 
 
-def test_trip_repository_delete(setup_database):
+def test_trip_repository_delete(setup_database, test_user):
     """Test deleting a trip"""
     trip = Trip(destination="Berlin", start_date="2025-11-01", end_date="2025-11-03", travelers=["Adult"])
-    saved_trip = TripRepository.create(trip, "test_user")
+    saved_trip = TripRepository.create(trip, test_user.id)
+    assert saved_trip.id is not None
     
     success = TripRepository.delete(saved_trip.id)
     assert success is True
@@ -77,11 +84,12 @@ def test_trip_repository_delete(setup_database):
     assert deleted_trip is None
 
 
-def test_packing_item_repository_create(setup_database):
+def test_packing_item_repository_create(setup_database, test_user):
     """Test creating a packing item"""
     # First create a trip
     trip = Trip(destination="Sydney", start_date="2025-11-01", end_date="2025-11-05", travelers=["Adult"])
-    saved_trip = TripRepository.create(trip, "test_user")
+    saved_trip = TripRepository.create(trip, test_user.id)
+    assert saved_trip.id is not None
     
     item = PackingItem(
         trip_id=saved_trip.id,
@@ -97,10 +105,11 @@ def test_packing_item_repository_create(setup_database):
     assert saved_item.is_essential is True
 
 
-def test_packing_item_repository_get_by_trip(setup_database):
+def test_packing_item_repository_get_by_trip(setup_database, test_user):
     """Test getting all items for a trip"""
     trip = Trip(destination="Bangkok", start_date="2025-11-01", end_date="2025-11-07", travelers=["Adult"])
-    saved_trip = TripRepository.create(trip, "test_user")
+    saved_trip = TripRepository.create(trip, test_user.id)
+    assert saved_trip.id is not None
     
     item1 = PackingItem(trip_id=saved_trip.id, name="Passport", category=ItemCategory.DOCUMENTS)
     item2 = PackingItem(trip_id=saved_trip.id, name="Sunscreen", category=ItemCategory.TOILETRIES)
@@ -112,26 +121,30 @@ def test_packing_item_repository_get_by_trip(setup_database):
     assert len(items) == 2
 
 
-def test_packing_item_repository_update(setup_database):
+def test_packing_item_repository_update(setup_database, test_user):
     """Test updating a packing item"""
     trip = Trip(destination="Dubai", start_date="2025-11-01", end_date="2025-11-05", travelers=["Adult"])
-    saved_trip = TripRepository.create(trip, "test_user")
+    saved_trip = TripRepository.create(trip, test_user.id)
+    assert saved_trip.id is not None
     
     item = PackingItem(trip_id=saved_trip.id, name="Phone", category=ItemCategory.ELECTRONICS)
     saved_item = PackingItemRepository.create(item)
+    assert saved_item.id is not None
     
     updated_item = PackingItemRepository.update(saved_item.id, is_packed=True)
-    
+    assert updated_item is not None
     assert updated_item.is_packed is True
 
 
-def test_cascade_delete(setup_database):
+def test_cascade_delete(setup_database, test_user):
     """Test that deleting a trip deletes all associated items"""
     trip = Trip(destination="Singapore", start_date="2025-11-01", end_date="2025-11-04", travelers=["Adult"])
-    saved_trip = TripRepository.create(trip, "test_user")
+    saved_trip = TripRepository.create(trip, test_user.id)
+    assert saved_trip.id is not None
     
     item = PackingItem(trip_id=saved_trip.id, name="Camera", category=ItemCategory.ELECTRONICS)
     saved_item = PackingItemRepository.create(item)
+    assert saved_item.id is not None
     
     # Delete the trip
     TripRepository.delete(saved_trip.id)

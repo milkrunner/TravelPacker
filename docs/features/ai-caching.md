@@ -13,12 +13,13 @@ AI suggestions are cached using a **deterministic MD5 hash** of the trip context
 ```python
 cache_data = {
     "destination": trip.destination,
+    "start_date": trip.start_date,      # NEW: Season/time of year affects weather
     "duration": trip.duration,
     "travel_style": trip.travel_style,
     "transportation": trip.transportation,
     "activities": sorted(trip.activities),  # Sorted for consistency
     "weather": trip.weather_conditions or "unknown",
-    "num_travelers": len(trip.travelers)
+    "travelers": sorted(trip.travelers)  # NEW: Individual names (sorted)
 }
 
 # Generate cache key: ai_suggestions:<md5_hash>
@@ -30,6 +31,10 @@ cache_key = f"ai_suggestions:{md5(json.dumps(cache_data, sort_keys=True))}"
 - **Deterministic**: Same trip context always generates the same key
 - **Context-aware**: Changes to any relevant field generate a new key
 - **Collision-resistant**: MD5 provides sufficient uniqueness for this use case
+- **Season-aware**: Start date included to differentiate summer vs. winter trips
+- **Traveler-specific**: Individual traveler names tracked for future personalization
+
+> **See also**: [AI Cache Invalidation](./ai-cache-invalidation.md) for detailed invalidation strategies and testing.
 
 ### Cache Mapping
 

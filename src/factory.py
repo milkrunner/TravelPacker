@@ -102,6 +102,13 @@ def _apply_rate_limits(app, config):
         **standard_limits
     }
     
+    # Exempt CSP reporting from rate limiting (browser generates reports)
+    try:
+        limiter.exempt(app.view_functions['main.csp_report'])
+        print(f"  [EXEMPT] CSP reporting endpoint exempt from rate limiting")
+    except KeyError:
+        pass
+    
     for endpoint, limit in all_limits.items():
         try:
             limiter.limit(limit)(app.view_functions[endpoint])

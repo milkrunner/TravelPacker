@@ -62,7 +62,21 @@ class TripService:
             return list(self.trips.values())
     
     def update_trip(self, trip_id: str, **kwargs) -> Optional[Trip]:
-        """Update trip details and invalidate AI suggestion cache"""
+        """Update trip details and invalidate AI suggestion cache
+        
+        Cache invalidation strategy:
+        - ALWAYS invalidates AI suggestions cache when trip context changes
+        - Context changes include: destination, dates, travelers, style, transportation, activities
+        - Weather updates also trigger invalidation as they affect packing suggestions
+        
+        Args:
+            trip_id: Trip identifier
+            **kwargs: Fields to update (destination, start_date, end_date, travelers, 
+                     travel_style, transportation, activities, weather_conditions, etc.)
+        
+        Returns:
+            Updated Trip object or None if not found
+        """
         if self.use_database:
             result = TripRepository.update(trip_id, **kwargs)
         else:
@@ -77,6 +91,7 @@ class TripService:
             result = trip
         
         # Invalidate AI suggestion cache since trip context changed
+        # This ensures fresh AI suggestions on next generation request
         if result:
             try:
                 from src.services.cache_service import get_cache_service
@@ -84,12 +99,24 @@ class TripService:
                 cache.invalidate_ai_suggestions_for_trip(trip_id)
                 cache.invalidate_trip(trip_id)
             except Exception as e:
-                print(f"Cache invalidation warning: {e}")
+                print(f"⚠️  Cache invalidation warning: {e}")
         
         return result
     
     def delete_trip(self, trip_id: str) -> bool:
-        """Delete a trip and invalidate caches"""
+        """Delete a trip and invalidate all associated caches
+        
+        Cache cleanup:
+        - Invalidates AI suggestions cache
+        - Invalidates trip metadata cache
+        - Ensures no stale data remains after deletion
+        
+        Args:
+            trip_id: Trip identifier
+        
+        Returns:
+            True if trip was deleted, False otherwise
+        """
         # Invalidate caches before deletion
         try:
             from src.services.cache_service import get_cache_service
@@ -97,7 +124,7 @@ class TripService:
             cache.invalidate_ai_suggestions_for_trip(trip_id)
             cache.invalidate_trip(trip_id)
         except Exception as e:
-            print(f"Cache invalidation warning: {e}")
+            print(f"⚠️  Cache invalidation warning: {e}")
         
         if self.use_database:
             return TripRepository.delete(trip_id)

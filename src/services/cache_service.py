@@ -191,20 +191,28 @@ class CacheService:
             return False
     
     def invalidate_trip(self, trip_id: str) -> bool:
-        """Invalidate trip cache when data changes"""
+        """Invalidate trip cache when data changes
+        
+        Clears cached trip metadata. Consider also calling
+        invalidate_ai_suggestions_for_trip() if trip context changed.
+        """
         if not self.enabled or self.redis_client is None:
             return False
         try:  # type: ignore[attr-defined]
             key = f"trip:{trip_id}"
             self.redis_client.delete(key)  # type: ignore[attr-defined]
-            print(f"🗑️  Invalidated cache for trip {trip_id}")
+            print(f"🗑️  Invalidated trip cache for {trip_id}")
             return True
         except RedisError as e:
             print(f"Cache delete error: {e}")
             return False
     
     def invalidate_ai_suggestions_for_trip(self, trip_id: str) -> bool:
-        """Invalidate AI suggestions cache for a specific trip"""
+        """Invalidate AI suggestions cache for a specific trip
+        
+        Called when trip context changes (destination, dates, travelers, etc.)
+        to ensure fresh AI suggestions are generated on next request.
+        """
         if not self.enabled or self.redis_client is None:
             return False
         try:  # type: ignore[attr-defined]
@@ -215,9 +223,11 @@ class CacheService:
             if cache_key:
                 self.redis_client.delete(cache_key)  # type: ignore[attr-defined]
                 self.redis_client.delete(mapping_key)  # type: ignore[attr-defined]
-                print(f"🗑️  Invalidated AI suggestions cache for trip {trip_id}")
+                print(f"🗑️  Invalidated AI cache for trip {trip_id} - fresh suggestions will be generated on next request")
                 return True
-            return False
+            else:
+                print(f"ℹ️  No cached AI suggestions found for trip {trip_id}")
+                return False
         except RedisError as e:
             print(f"Cache invalidation error: {e}")
             return False

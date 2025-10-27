@@ -5,6 +5,7 @@ Main routes blueprint
 from typing import Optional
 from flask import Blueprint, render_template, jsonify, request
 from flask_login import current_user
+from src.extensions import csrf
 from src.services.trip_service import TripService
 
 
@@ -61,6 +62,7 @@ def health_check():
 
 
 @main_bp.route('/csp-report', methods=['POST'])
+@csrf.exempt  # Browser-generated CSP reports don't include CSRF tokens
 def csp_report():
     """Endpoint for receiving Content Security Policy violation reports"""
     try:
@@ -122,6 +124,11 @@ def handle_csrf_error(error):
 def handle_exception(error):
     """Handle uncaught exceptions in production"""
     from flask import current_app
+    from werkzeug.exceptions import HTTPException
+    
+    # HTTP exceptions (404, 405, etc.) should be returned as-is, not re-raised
+    if isinstance(error, HTTPException):
+        return error
     
     print(f"Unhandled exception: {error}")
     
