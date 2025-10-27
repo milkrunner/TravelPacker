@@ -57,7 +57,7 @@ def init_extensions(app):
     csp = {
         'default-src': ["'self'"],
         'script-src': ["'self'", 'https://accounts.google.com/gsi/client'],
-        'style-src': ["'self'", 'https://accounts.google.com/gsi/style'],
+        'style-src': ["'self'", "'unsafe-inline'", 'https://accounts.google.com/gsi/style'],  # unsafe-inline required for Google Sign-In
         'img-src': ["'self'", 'data:', 'https:', 'https://lh3.googleusercontent.com'],
         'font-src': ["'self'"],
         'connect-src': ["'self'", 'https://accounts.google.com'],
@@ -73,7 +73,7 @@ def init_extensions(app):
         strict_transport_security=True,
         strict_transport_security_max_age=31536000,
         content_security_policy=csp,
-        content_security_policy_nonce_in=['script-src', 'style-src'],
+        content_security_policy_nonce_in=['script-src'],  # Only nonce for scripts, not styles (Google Sign-In needs unsafe-inline)
         frame_options='DENY',
         referrer_policy='strict-origin-when-cross-origin',
     )

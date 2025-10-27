@@ -31,19 +31,19 @@
             </div>
             <div class="g_id_signin"
                  data-type="standard"
-                 data-size="large"
+                 data-size="medium"
                  data-theme="outline"
                  data-text="signin_with"
                  data-shape="rectangular"
                  data-logo_alignment="left"
-                 data-width="400">
+                 data-width="220">
             </div>
             {% else %}
             <div class="alert alert-warning">
                 <p><strong>Google Sign-In not configured</strong></p>
                 <p class="small">Please set <code>GOOGLE_CLIENT_ID</code> in your .env file.</p>
                 <p class="small">Get a Client ID at: <a href="https://console.cloud.google.com/apis/credentials" target="_blank">Google Cloud Console</a></p>
-                <ol class="small" style="text-align: left; margin-top: 1rem;">
+                <ol class="small google-setup-steps">
                     <li>Create a new project or select existing</li>
                     <li>Enable Google Identity Services</li>
                     <li>Create OAuth 2.0 Client ID (Web application)</li>
@@ -79,8 +79,7 @@
         if (!errorDiv) {
             errorDiv = document.createElement('div');
             errorDiv.id = 'login-error-message';
-            errorDiv.className = 'alert alert-warning';
-            errorDiv.style.marginTop = '1rem';
+            errorDiv.className = 'alert alert-warning login-error-message';
             const methodsDiv = document.querySelector('.login-methods');
             if (methodsDiv) {
                 methodsDiv.appendChild(errorDiv);
@@ -96,8 +95,7 @@
         // Show loading state
         const container = document.querySelector('.g_id_signin');
         if (container) {
-            container.style.opacity = '0.5';
-            container.style.pointerEvents = 'none';
+            container.classList.add('loading');
         }
 
         // Send the credential to our backend for verification
@@ -128,8 +126,7 @@
                     })
                 });
                 if (container) {
-                    container.style.opacity = '1';
-                    container.style.pointerEvents = 'auto';
+                    container.classList.remove('loading');
                 }
             }
         })
@@ -146,15 +143,14 @@
                 })
             });
             if (container) {
-                container.style.opacity = '1';
-                container.style.pointerEvents = 'auto';
+                container.classList.remove('loading');
             }
         });
     }
 </script>
 {% endif %}
 
-<style nonce="{{ csp_nonce() }}">
+<style>
     .login-container {
         display: flex;
         justify-content: center;
@@ -241,6 +237,20 @@
 
     .small {
         font-size: 0.875rem;
+    }
+
+    .google-setup-steps {
+        text-align: left;
+        margin-top: 1rem;
+    }
+
+    .login-error-message {
+        margin-top: 1rem;
+    }
+
+    .g_id_signin.loading {
+        opacity: 0.5;
+        pointer-events: none;
     }
 </style>
 {% endblock %}

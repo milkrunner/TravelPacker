@@ -57,7 +57,10 @@ class AIService:
         # Try cache first (LIGHTNING FAST! ⚡)
         cached_suggestions = self.cache.get_ai_suggestions(cache_data)
         if cached_suggestions:
+            print(f"⚡ Cache HIT for trip {trip.id}: {trip.destination} ({trip.duration}d, {len(trip.travelers)} travelers)")
             return cached_suggestions
+        
+        print(f"💭 Cache MISS for trip {trip.id}: Generating fresh AI suggestions...")
         
         # Cache miss - generate new suggestions
         print("🤖 Generating AI suggestions...")
@@ -86,20 +89,34 @@ class AIService:
                 suggestions = self._get_mock_suggestions(trip)
         
         # Cache the results for 24 hours with trip_id mapping for easy invalidation
-        self.cache.set_ai_suggestions(cache_data, suggestions, ttl_hours=24, trip_id=trip.id)
+        cache_success = self.cache.set_ai_suggestions(cache_data, suggestions, ttl_hours=24, trip_id=trip.id)
+        if cache_success:
+            print(f"💾 Cached {len(suggestions)} suggestions for trip {trip.id} (TTL: 24h)")
         
         return suggestions
     
     def _trip_to_cache_data(self, trip: Trip) -> Dict[str, Any]:
-        """Convert trip to cache key data (only relevant fields)"""
+        """Convert trip to cache key data (only relevant fields)
+        
+        Cache key includes:
+        - destination: Location affects suggestions
+        - start_date: Season/time of year affects packing needs
+        - duration: Trip length determines quantities
+        - travel_style: Business/leisure/adventure affects item selection
+        - transportation: Flight/road trip affects luggage constraints
+        - activities: Specific activities require specialized gear
+        - weather: Temperature/conditions affect clothing choices
+        - traveler_names: Individual travelers for personalization
+        """
         return {
             "destination": trip.destination,
+            "start_date": trip.start_date,  # Season matters for packing
             "duration": trip.duration,
             "travel_style": trip.travel_style,
             "transportation": trip.transportation,
             "activities": sorted(trip.activities) if trip.activities else [],
             "weather": trip.weather_conditions or "unknown",
-            "num_travelers": len(trip.travelers)
+            "travelers": sorted(trip.travelers) if trip.travelers else []  # Sorted for consistent hashing
         }
     
     def _get_mock_suggestions(self, trip: Trip) -> List[str]:

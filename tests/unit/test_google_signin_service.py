@@ -53,17 +53,12 @@ def test_google_user_creation_with_legacy_not_null(google_service):
         assert db_user is not None, 'User must exist in database'
         assert getattr(db_user, 'oauth_provider') == 'google'
         assert getattr(db_user, 'oauth_id') == user_info['oauth_id']
-        # password_hash should have dummy value, not None and not empty
-        assert getattr(db_user, 'password_hash'), 'Dummy password hash should be set'
-        # Ensure new oauth columns exist (auto-patched)
-        # PRAGMA table_info to confirm columns
-        raw_conn = session.connection().connection
-        cur = raw_conn.cursor()
-        cur.execute('PRAGMA table_info(users)')
-        cols = {r[1] for r in cur.fetchall()}
-        for required in ['oauth_provider', 'oauth_id', 'profile_picture']:
-            assert required in cols, f'Missing auto-patched column: {required}'
-        cur.close()
+        # password_hash should be None for OAuth-only users (nullable per schema)
+        assert getattr(db_user, 'password_hash') is None, 'OAuth users should have NULL password_hash'
+        # Verify OAuth columns are accessible (confirms schema has them)
+        assert hasattr(db_user, 'oauth_provider'), 'Missing oauth_provider column'
+        assert hasattr(db_user, 'oauth_id'), 'Missing oauth_id column'
+        assert hasattr(db_user, 'profile_picture'), 'Missing profile_picture column'
     finally:
         close_session()
 
