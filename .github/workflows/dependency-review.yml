@@ -39,7 +39,7 @@ jobs:
 
     - name: Upload Dependency Review Results
       if: always()
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v5
       with:
         name: dependency-review-results
         path: dependency-review-*.json
@@ -53,7 +53,7 @@ jobs:
 
     - name: Upload pip-audit Results
       if: always()
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v5
       with:
         name: pip-audit-results
         path: pip-audit-results.json
