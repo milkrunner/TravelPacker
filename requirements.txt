@@ -1,6 +1,6 @@
 # Core dependencies
 setuptools>=80.9.0  # Security: Fixed PYSEC-2022-43012, PYSEC-2025-49
-flask==3.0.0
+flask==3.1.2
 flask-wtf==1.2.2
 flask-limiter==3.5.0
 flask-talisman==1.1.0
