@@ -15,7 +15,7 @@ google-auth==2.42.1
 google-generativeai==0.8.5
 
 # Data handling
-pydantic==2.12.3
+pydantic==2.12.4
 
 # Database
 sqlalchemy==2.0.44
