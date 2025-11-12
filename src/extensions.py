@@ -8,6 +8,9 @@ from flask_limiter.util import get_remote_address
 from flask_talisman import Talisman
 from flask_login import LoginManager
 from src.utils.security_utils import rate_limit_key_func
+from src.utils.logging_config import get_logger
+
+logger = get_logger(__name__)
 
 
 # Initialize extensions without app binding
@@ -38,7 +41,7 @@ def init_extensions(app):
             strategy="fixed-window",
         )
         backend_type = "Redis" if "redis://" in storage_url else "in-memory"
-        print(f"✅ Rate limiter initialized with {backend_type} backend (per-user + per-IP)")
+        logger.info(f"Rate limiter initialized with {backend_type} backend (per-user + per-IP)")
         
         # Start security monitor cleanup task
         from src.utils.security_utils import start_cleanup_task
@@ -51,7 +54,7 @@ def init_extensions(app):
             storage_uri="memory://",
             strategy="fixed-window",
         )
-        print("✅ Rate limiter initialized (disabled)")
+        logger.info("Rate limiter initialized (disabled)")
     
     # Security Headers (Talisman)
     csp = {
@@ -77,7 +80,7 @@ def init_extensions(app):
         frame_options='DENY',
         referrer_policy='strict-origin-when-cross-origin',
     )
-    print(f"✅ Security headers enabled (HTTPS redirect: {force_https})")
+    logger.info(f"Security headers enabled (HTTPS redirect: {force_https})")
     
     # Flask-Login
     login_manager.init_app(app)
@@ -94,4 +97,4 @@ def init_extensions(app):
         finally:
             close_session()
     
-    print("✅ Flask extensions initialized")
+    logger.info("Flask extensions initialized")

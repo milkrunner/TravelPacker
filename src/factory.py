@@ -11,6 +11,9 @@ from src.services.ai_service import AIService
 from src.services.trip_service import TripService
 from src.services.packing_list_service import PackingListService
 from src.services.oauth_service import GoogleSignInService
+from src.utils.logging_config import init_app_logging, get_logger
+
+logger = get_logger(__name__)
 
 
 def create_app(config_name=None):
@@ -32,12 +35,14 @@ def create_app(config_name=None):
     config = get_config(config_name)
     app.config.from_object(config)
     
-    print(f"🚀 Initializing NikNotes application (environment: {config_name or 'development'})")
+    # Initialize logging system
+    init_app_logging(app)
+    logger.info(f"Initializing NikNotes application (environment: {config_name or 'development'})")
     
     # Initialize database
     if config.USE_DATABASE:
         init_db()
-        print("✅ Database initialized")
+        logger.info("Database initialized")
     
     # Initialize Flask extensions (CSRF, rate limiter, security headers, login manager)
     init_extensions(app)
@@ -54,7 +59,7 @@ def create_app(config_name=None):
     # Apply rate limits to specific endpoints
     _apply_rate_limits(app, config)
     
-    print("✅ Application factory setup complete")
+    logger.info("Application factory setup complete")
     
     return app
 
@@ -105,7 +110,7 @@ def _apply_rate_limits(app, config):
     # Exempt CSP reporting from rate limiting (browser generates reports)
     try:
         limiter.exempt(app.view_functions['main.csp_report'])
-        print(f"  [EXEMPT] CSP reporting endpoint exempt from rate limiting")
+        logger.debug("[EXEMPT] CSP reporting endpoint exempt from rate limiting")
     except KeyError:
         pass
     
@@ -118,7 +123,7 @@ def _apply_rate_limits(app, config):
                 'MODERATE' if endpoint in moderate_limits else
                 'STANDARD'
             )
-            print(f"  [{category}] Applied rate limit '{limit}' to {endpoint}")
+            logger.debug(f"[{category}] Applied rate limit '{limit}' to {endpoint}")
         except KeyError:
             # Endpoint not found, skip silently
             pass
@@ -146,7 +151,7 @@ def _init_services(app, config):
         'google_signin_service': google_signin_service
     }
     
-    print("✅ Services initialized")
+    logger.info("Services initialized")
     
     return service_container
 

@@ -134,15 +134,17 @@ See [SECURITY_AUDIT.md](SECURITY_AUDIT.md) for complete security details.
 **🐳 Docker (Recommended for Production):**
 
 ```bash
-# Set your Gemini API key in .env file or environment
-export GEMINI_API_KEY=your_api_key_here
-# Generate and set a secure Flask secret key
-export FLASK_SECRET_KEY=$(python -c "import secrets; print(secrets.token_hex(32))")
+# 1. Create environment configuration
+cp .env.example .env
+# Edit .env and set your API keys:
+#   - GEMINI_API_KEY (required)
+#   - FLASK_SECRET_KEY (generate with: python -c "import secrets; print(secrets.token_hex(32))")
+#   - POSTGRES_PASSWORD (generate with: python -c "import secrets; print(secrets.token_urlsafe(32))")
 
-# Start all services (PostgreSQL + Redis + Web App)
+# 2. Start all services (PostgreSQL + Redis + Web App)
 docker compose up -d
 
-# Open: http://localhost:5000
+# 3. Open: http://localhost:5000
 ```
 
 **Note:** PostgreSQL performance settings are configured in `docker-compose.yml` at container startup. No manual configuration needed!

@@ -8,6 +8,9 @@ from dotenv import load_dotenv
 from src.models.trip import Trip
 from src.services.cache_service import get_cache_service
 from src.services.weather_service import get_weather_service
+from src.utils.logging_config import get_logger
+
+logger = get_logger(__name__)
 
 # Load environment variables
 load_dotenv()
@@ -35,7 +38,7 @@ class AIService:
             genai.configure(api_key=self.api_key)
             self.model = genai.GenerativeModel(self.model_name)
         
-        print(f"✅ AI Service initialized (Cache: {'ON' if self.cache.enabled else 'OFF'})")
+        logger.info(f"AI Service initialized (Cache: {'ON' if self.cache.enabled else 'OFF'})")
     
     def generate_packing_suggestions(self, trip: Trip) -> List[str]:
         """Generate packing suggestions with blazing fast Redis caching ⚡"""
@@ -57,13 +60,13 @@ class AIService:
         # Try cache first (LIGHTNING FAST! ⚡)
         cached_suggestions = self.cache.get_ai_suggestions(cache_data)
         if cached_suggestions:
-            print(f"⚡ Cache HIT for trip {trip.id}: {trip.destination} ({trip.duration}d, {len(trip.travelers)} travelers)")
+            logger.info(f"Cache HIT for trip {trip.id}: {trip.destination} ({trip.duration}d, {len(trip.travelers)} travelers)")
             return cached_suggestions
         
-        print(f"💭 Cache MISS for trip {trip.id}: Generating fresh AI suggestions...")
+        logger.info(f"Cache MISS for trip {trip.id}: Generating fresh AI suggestions...")
         
         # Cache miss - generate new suggestions
-        print("🤖 Generating AI suggestions...")
+        logger.info("Generating AI suggestions...")
         if self.use_mock:
             suggestions = self._get_mock_suggestions(trip)
         else:
@@ -85,13 +88,13 @@ class AIService:
                 
                 suggestions = suggestions if suggestions else self._get_mock_suggestions(trip)
             except Exception as e:
-                print(f"Error generating AI suggestions: {e}")
+                logger.error(f"Error generating AI suggestions: {e}")
                 suggestions = self._get_mock_suggestions(trip)
         
         # Cache the results for 24 hours with trip_id mapping for easy invalidation
         cache_success = self.cache.set_ai_suggestions(cache_data, suggestions, ttl_hours=24, trip_id=trip.id)
         if cache_success:
-            print(f"💾 Cached {len(suggestions)} suggestions for trip {trip.id} (TTL: 24h)")
+            logger.info(f"Cached {len(suggestions)} suggestions for trip {trip.id} (TTL: 24h)")
         
         return suggestions
     
