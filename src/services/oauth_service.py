@@ -11,6 +11,9 @@ from google.oauth2 import id_token
 from google.auth.transport import requests as google_requests
 from src.database import get_session, close_session
 from src.database.models import User as DBUser
+from src.utils.logging_config import get_logger
+
+logger = get_logger(__name__)
 
 
 class GoogleSignInService:
@@ -29,13 +32,13 @@ class GoogleSignInService:
         self.client_id = os.getenv('GOOGLE_CLIENT_ID')
         
         if not self.client_id or self.client_id == 'your_google_client_id_here':
-            print("⚠️  Google Sign-In not configured - set GOOGLE_CLIENT_ID in .env")
-            print("    Get a Client ID at: https://console.cloud.google.com/apis/credentials")
+            logger.warning("Google Sign-In not configured - set GOOGLE_CLIENT_ID in .env")
+            logger.info("Get a Client ID at: https://console.cloud.google.com/apis/credentials")
             self.enabled = False
             return
         
         self.enabled = True
-        print(f"✅ Google Sign-In initialized (Client ID: {self.client_id[:20]}...)")
+        logger.info(f"Google Sign-In initialized (Client ID: {self.client_id[:20]}...)")
     
     def verify_google_token(self, credential):
         """Verify Google ID token and return user info"""
@@ -63,10 +66,10 @@ class GoogleSignInService:
                 'email_verified': idinfo.get('email_verified', False)
             }
         except ValueError as e:
-            print(f"Google token verification failed: {e}")
+            logger.warning(f"Google token verification failed: {e}")
             return None
         except Exception as e:
-            print(f"Unexpected error verifying Google token: {e}")
+            logger.error(f"Unexpected error verifying Google token: {e}")
             return None
     
     def find_or_create_user(self, user_info):
@@ -123,18 +126,16 @@ class GoogleSignInService:
             # Sanitize email for safe logging (prevent log injection)
             email = getattr(new_user, 'email', 'unknown')
             safe_email = email.replace('\n', '').replace('\r', '').replace('\t', ' ') if email and email != 'unknown' else 'unknown'
-            print(f"✅ Created new user via Google Sign-In: {safe_email}")
+            logger.info(f"Created new user via Google Sign-In: {safe_email}")
             return new_user
             
         except Exception as e:
             # Rollback the transaction on any error (critical for PostgreSQL)
             try:
                 db_session.rollback()
-            except Exception:
-                pass  # Session might already be closed
-            print(f"Error creating/finding Google user: {e}")
-            import traceback
-            traceback.print_exc()  # Print full traceback for debugging
+            except Exception as rollback_error:
+                logger.warning(f"Rollback failed (session might be closed): {rollback_error}")
+            logger.error(f"Error creating/finding Google user: {e}", exc_info=True)
             return None
         finally:
             close_session()

@@ -13,6 +13,10 @@ import time
 from collections import defaultdict, deque
 from datetime import datetime, timedelta
 import threading
+from src.utils.logging_config import get_logger, log_security_event
+import logging
+
+logger = get_logger(__name__)
 
 
 class SecurityMonitor:
@@ -51,8 +55,13 @@ class SecurityMonitor:
             # Check if threshold exceeded
             if len(attempts) >= self.max_failed_attempts:
                 self._suspicious_ips.add(ip_address)
-                print(f"🚨 SECURITY ALERT: Brute-force detected from {ip_address} "
-                      f"({len(attempts)} failed attempts in {self.failed_attempt_window}s)")
+                log_security_event(
+                    logger,
+                    f"Brute-force detected from {ip_address} ({len(attempts)} failed attempts in {self.failed_attempt_window}s)",
+                    level=logging.WARNING,
+                    ip_address=ip_address,
+                    attempts=len(attempts)
+                )
                 return True
             
             return False
@@ -202,7 +211,14 @@ def sensitive_endpoint(
             ip = get_ip_address()
             user_id = current_user.id if current_user.is_authenticated else 'anonymous'
             endpoint = request.endpoint or f.__name__
-            print(f"🔐 Sensitive operation: {endpoint} by user={user_id} from {ip}")
+            log_security_event(
+                logger,
+                f"Sensitive operation: {endpoint}",
+                level=logging.INFO,
+                user_id=user_id,
+                ip_address=ip,
+                endpoint=endpoint
+            )
             
             # Continue with the actual function
             return f(*args, **kwargs)
