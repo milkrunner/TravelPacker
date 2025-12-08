@@ -36,7 +36,7 @@ pytest==7.4.4
 pytest-cov==4.1.0
 
 # Security - Dependency Scanning
-pip-audit==2.9.0  # Latest version with enhanced OSV database support
+pip-audit==2.10.0  # Latest version with enhanced OSV database support
 
 # Security Status:
 # ✅ All package vulnerabilities resolved (upgraded to latest secure versions)
