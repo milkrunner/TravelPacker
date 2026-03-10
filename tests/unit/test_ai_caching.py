@@ -132,6 +132,7 @@ class TestCacheInvalidation:
     """Test cache invalidation on trip mutations"""
 
     @patch("src.services.cache_service.get_cache_service")
+    @patch.dict("sys.modules", {"src.database": Mock(), "src.database.repository": Mock()})
     def test_cache_invalidated_on_trip_update(self, mock_get_cache):
         """Verify AI cache is invalidated when trip is updated"""
         from src.services.trip_service import TripService
@@ -160,6 +161,7 @@ class TestCacheInvalidation:
         mock_cache.invalidate_trip.assert_called_once_with(trip.id)
 
     @patch("src.services.cache_service.get_cache_service")
+    @patch.dict("sys.modules", {"src.database": Mock(), "src.database.repository": Mock()})
     def test_cache_invalidated_on_trip_deletion(self, mock_get_cache):
         """Verify AI cache is invalidated when trip is deleted"""
         from src.services.trip_service import TripService
