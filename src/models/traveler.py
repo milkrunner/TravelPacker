@@ -2,13 +2,14 @@
 Traveler model
 """
 
-from enum import Enum
-from typing import Optional, List
+from enum import StrEnum
+
 from pydantic import BaseModel
 
 
-class TravelerType(str, Enum):
+class TravelerType(StrEnum):
     """Types of travelers"""
+
     ADULT = "adult"
     CHILD = "child"
     INFANT = "infant"
@@ -17,9 +18,10 @@ class TravelerType(str, Enum):
 
 class Traveler(BaseModel):
     """Traveler information"""
-    id: Optional[str] = None
+
+    id: str | None = None
     name: str
     traveler_type: TravelerType
-    age: Optional[int] = None
-    special_needs: List[str] = []
-    preferences: List[str] = []
+    age: int | None = None
+    special_needs: list[str] = []
+    preferences: list[str] = []

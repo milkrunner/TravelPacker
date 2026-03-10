@@ -3,11 +3,12 @@ Quick test script to verify authentication works
 """
 
 import os
-os.environ['FLASK_SECRET_KEY'] = 'test-secret-key-12345678'
 
-from src.database.repository import UserRepository
-from src.database import get_session, close_session
+os.environ["FLASK_SECRET_KEY"] = "test-secret-key-12345678"
+
+from src.database import close_session, get_session
 from src.database.models import User
+from src.database.repository import UserRepository
 
 print("Testing Authentication System")
 print("=" * 50)
@@ -15,11 +16,7 @@ print("=" * 50)
 # Test 1: Check if UserRepository.create works
 print("\n1. Testing user creation...")
 try:
-    test_user = UserRepository.create(
-        username="testuser123",
-        email="testuser@example.com",
-        password="testpassword"
-    )
+    test_user = UserRepository.create(username="testuser123", email="testuser@example.com", password="testpassword")
     print(f"✓ User created: {test_user.username}")
     print(f"  - ID: {test_user.id}")
     print(f"  - Email: {test_user.email}")
@@ -78,7 +75,8 @@ except Exception as e:
 # Cleanup
 print("\n6. Cleaning up test user...")
 try:
-    from src.database import get_session, close_session
+    from src.database import close_session, get_session
+
     session = get_session()
     test_user = session.query(User).filter_by(username="testuser123").first()
     if test_user:

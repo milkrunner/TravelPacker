@@ -7,6 +7,7 @@ Run this script to add audit logging capabilities to your database.
 from src.database import engine
 from src.database.audit_models import AuditLog
 
+
 def create_audit_logs_table():
     """Create the audit_logs table in the database"""
     try:
@@ -39,10 +40,11 @@ def create_audit_logs_table():
         print("- idx_audit_category_timestamp (event_category, timestamp)")
         print("- idx_audit_resource (resource_type, resource_id)")
         print("- idx_audit_timestamp_desc (timestamp DESC)")
-        
+
     except Exception as e:
         print(f"❌ Error creating audit_logs table: {e}")
         raise
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     create_audit_logs_table()

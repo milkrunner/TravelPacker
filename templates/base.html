@@ -11,43 +11,54 @@
     {% block extra_css %}{% endblock %}
 </head>
 <body>
-    <nav class="navbar">
+    <a href="#main-content" class="skip-link">Skip to main content</a>
+
+    <nav class="navbar" role="navigation" aria-label="Main navigation">
         <div class="container">
             <div class="nav-brand">
-                <span class="logo">🎒</span>
+                <span class="logo" aria-hidden="true">🎒</span>
                 <a href="{{ url_for('main.index') }}" class="brand-name">NikNotes</a>
             </div>
-            <div class="nav-links">
+            <button class="nav-toggle" id="navToggle" aria-label="Toggle navigation menu" aria-expanded="false" aria-controls="navLinks">
+                <span class="nav-toggle-bar"></span>
+                <span class="nav-toggle-bar"></span>
+                <span class="nav-toggle-bar"></span>
+            </button>
+            <div class="nav-links" id="navLinks" role="menubar">
                 {% if current_user.is_authenticated %}
-                <a href="{{ url_for('main.index') }}" class="nav-link">My Trips</a>
-                <a href="{{ url_for('trips.new_trip') }}" class="nav-link btn-primary">➕ New Trip</a>
-                <div class="user-menu">
+                <a href="{{ url_for('main.index') }}" class="nav-link" role="menuitem">My Trips</a>
+                <a href="{{ url_for('trips.new_trip') }}" class="nav-link btn-primary" role="menuitem">
+                    <span aria-hidden="true">➕</span> New Trip
+                </a>
+                <div class="user-menu" role="menuitem">
                     {% if current_user.profile_picture %}
-                    <img src="{{ current_user.profile_picture }}" alt="{{ current_user.username }}" class="user-avatar">
+                    <img src="{{ current_user.profile_picture }}" alt="Profile picture of {{ current_user.username }}" class="user-avatar">
                     {% else %}
-                    <span class="user-avatar-text">{{ current_user.username[0].upper() }}</span>
+                    <span class="user-avatar-text" aria-hidden="true">{{ current_user.username[0].upper() }}</span>
                     {% endif %}
                     <span class="user-name">{{ current_user.username }}</span>
                     <a href="{{ url_for('auth.logout') }}" class="nav-link logout-link">Logout</a>
                 </div>
                 {% else %}
-                <a href="{{ url_for('auth.login') }}" class="nav-link btn-primary">🔐 Login</a>
+                <a href="{{ url_for('auth.login') }}" class="nav-link btn-primary" role="menuitem">
+                    <span aria-hidden="true">🔐</span> Login
+                </a>
                 {% endif %}
-                <button id="darkModeToggle" class="dark-mode-toggle" aria-label="Toggle dark mode">
-                    <span class="toggle-icon light-icon">☀️</span>
-                    <span class="toggle-icon dark-icon">🌙</span>
+                <button id="darkModeToggle" class="dark-mode-toggle" aria-label="Toggle dark mode" role="switch" aria-checked="false">
+                    <span class="toggle-icon light-icon" aria-hidden="true">☀️</span>
+                    <span class="toggle-icon dark-icon" aria-hidden="true">🌙</span>
                 </button>
             </div>
         </div>
     </nav>
 
-    <main class="main-content">
+    <main id="main-content" class="main-content" role="main">
         {% block content %}{% endblock %}
     </main>
 
-    <footer class="footer">
+    <footer class="footer" role="contentinfo">
         <div class="container">
-            <p>Made with ❤️ for stress-free travel planning | Powered by Google Gemini AI</p>
+            <p>Made with <span aria-label="love">❤️</span> for stress-free travel planning | Powered by Google Gemini AI</p>
         </div>
     </footer>
 

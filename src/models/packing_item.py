@@ -2,13 +2,14 @@
 Packing item model
 """
 
-from enum import Enum
-from typing import Optional
+from enum import StrEnum
+
 from pydantic import BaseModel
 
 
-class ItemCategory(str, Enum):
+class ItemCategory(StrEnum):
     """Categories for packing items"""
+
     CLOTHING = "clothing"
     TOILETRIES = "toiletries"
     ELECTRONICS = "electronics"
@@ -22,13 +23,15 @@ class ItemCategory(str, Enum):
 
 class PackingItem(BaseModel):
     """Individual packing list item"""
-    id: Optional[str] = None
-    trip_id: Optional[str] = None
+
+    id: str | None = None
+    trip_id: str | None = None
     name: str
     category: ItemCategory
     quantity: int = 1
     is_packed: bool = False
     is_essential: bool = False
-    notes: Optional[str] = None
+    notes: str | None = None
     ai_suggested: bool = False
+    actually_used: bool | None = None  # None = not reviewed, True = used, False = not used
     display_order: int = 0

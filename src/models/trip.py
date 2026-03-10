@@ -3,13 +3,14 @@ Trip model
 """
 
 from datetime import datetime
-from enum import Enum
-from typing import List, Optional
+from enum import StrEnum
+
 from pydantic import BaseModel, Field
 
 
-class TravelStyle(str, Enum):
+class TravelStyle(StrEnum):
     """Types of travel styles"""
+
     BUSINESS = "business"
     LEISURE = "leisure"
     ADVENTURE = "adventure"
@@ -17,8 +18,9 @@ class TravelStyle(str, Enum):
     LUXURY = "luxury"
 
 
-class TransportMethod(str, Enum):
+class TransportMethod(StrEnum):
     """Transportation methods"""
+
     FLIGHT = "flight"
     ROAD_TRIP = "road_trip"
     TRAIN = "train"
@@ -28,27 +30,28 @@ class TransportMethod(str, Enum):
 
 class Trip(BaseModel):
     """Trip information model"""
-    id: Optional[str] = None
+
+    id: str | None = None
     destination: str
     start_date: str
     end_date: str
     duration: int = Field(default=1)
-    travelers: List[str] = Field(default_factory=list)
+    travelers: list[str] = Field(default_factory=list)
     travel_style: TravelStyle = TravelStyle.LEISURE
     transportation: TransportMethod = TransportMethod.FLIGHT
-    activities: List[str] = Field(default_factory=list)
-    special_notes: Optional[str] = None
-    weather_conditions: Optional[str] = None
+    activities: list[str] = Field(default_factory=list)
+    special_notes: str | None = None
+    weather_conditions: str | None = None
     is_template: bool = False
-    template_name: Optional[str] = None
-    
+    template_name: str | None = None
+
     def model_post_init(self, __context):
         """Calculate duration after initialization"""
         if self.start_date and self.end_date:
             start = datetime.fromisoformat(self.start_date)
             end = datetime.fromisoformat(self.end_date)
             self.duration = (end - start).days + 1
-    
+
     @property
     def transport_display(self) -> str:
         """Get friendly display name for transportation"""
@@ -57,10 +60,10 @@ class Trip(BaseModel):
             TransportMethod.ROAD_TRIP: "🚗 Road Trip",
             TransportMethod.TRAIN: "🚂 Train",
             TransportMethod.CRUISE: "🚢 Cruise",
-            TransportMethod.OTHER: "🚶 Other"
+            TransportMethod.OTHER: "🚶 Other",
         }
         return transport_map.get(self.transportation, "🚶 Other")
-    
+
     @property
     def travel_style_display(self) -> str:
         """Get friendly display name for travel style"""
@@ -69,6 +72,6 @@ class Trip(BaseModel):
             TravelStyle.LEISURE: "🏖️ Leisure",
             TravelStyle.ADVENTURE: "🏔️ Adventure",
             TravelStyle.BACKPACKING: "🎒 Backpacking",
-            TravelStyle.LUXURY: "✨ Luxury"
+            TravelStyle.LUXURY: "✨ Luxury",
         }
         return style_map.get(self.travel_style, "🌍 Travel")

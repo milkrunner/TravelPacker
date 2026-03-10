@@ -2,9 +2,7 @@
 Initialize or reset the database for development
 """
 
-from src.database import init_db, engine, Base
-from src.database.models import User, Trip, PackingItem, Traveler
-from src.database.audit_models import AuditLog
+from src.database import Base, engine
 
 print("Initializing database...")
 

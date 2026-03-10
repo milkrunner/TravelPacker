@@ -5,66 +5,70 @@
 {% block content %}
 <div class="container">
     <div class="page-header">
-        <h1>🌍 My Trips</h1>
+        <h1><span aria-hidden="true">🌍</span> My Trips</h1>
         <p class="subtitle">Plan your adventures and never forget what to pack!</p>
     </div>
 
     {% if templates %}
-    <div class="section-header" style="margin-top: 32px; margin-bottom: 16px;">
-        <h2>💾 Trip Templates</h2>
-        <p style="color: #6b7280; font-size: 14px;">Reusable trip configurations for quick planning</p>
-    </div>
-    <div class="trips-grid">
-        {% for template in templates %}
-        <div class="trip-card" style="border-left: 4px solid #8b5cf6;">
-            <div class="trip-header">
-                <h3>💾 {{ template.template_name }}</h3>
-                <span class="trip-badge trip-badge-{{ template.travel_style.value }}">{{ template.travel_style_display }}</span>
-            </div>
-            <div class="trip-details">
-                <p><strong>📍 Destination:</strong> {{ template.destination }}</p>
-                <p><strong>👥 Travelers:</strong> {{ template.travelers|length }}</p>
-                <p><strong>{{ template.transport_display }}</strong></p>
-            </div>
-            <div class="trip-actions">
-                <a href="{{ url_for('trips.create_from_template', template_id=template.id) }}" class="btn btn-primary">Use Template</a>
-                <a href="{{ url_for('trips.view_trip', trip_id=template.id) }}" class="btn btn-secondary">View</a>
-            </div>
+    <section aria-labelledby="templates-heading" class="section-block">
+        <div class="section-header">
+            <h2 id="templates-heading"><span aria-hidden="true">💾</span> Trip Templates</h2>
+            <p class="section-subtitle">Reusable trip configurations for quick planning</p>
         </div>
-        {% endfor %}
-    </div>
+        <div class="trips-grid" role="list">
+            {% for template in templates %}
+            <article class="trip-card trip-card--template" role="listitem">
+                <div class="trip-header">
+                    <h3><span aria-hidden="true">💾</span> {{ template.template_name }}</h3>
+                    <span class="trip-badge trip-badge-{{ template.travel_style.value }}">{{ template.travel_style_display }}</span>
+                </div>
+                <div class="trip-details">
+                    <p><strong><span aria-hidden="true">📍</span> Destination:</strong> {{ template.destination }}</p>
+                    <p><strong><span aria-hidden="true">👥</span> Travelers:</strong> {{ template.travelers|length }}</p>
+                    <p><strong>{{ template.transport_display }}</strong></p>
+                </div>
+                <div class="trip-actions">
+                    <a href="{{ url_for('trips.create_from_template', template_id=template.id) }}" class="btn btn-primary" aria-label="Use template {{ template.template_name }}">Use Template</a>
+                    <a href="{{ url_for('trips.view_trip', trip_id=template.id) }}" class="btn btn-secondary" aria-label="View template {{ template.template_name }}">View</a>
+                </div>
+            </article>
+            {% endfor %}
+        </div>
+    </section>
     {% endif %}
 
     {% if trips %}
-    <div class="section-header" style="margin-top: 32px; margin-bottom: 16px;">
-        <h2>✈️ Upcoming Trips</h2>
-    </div>
-    <div class="trips-grid">
-        {% for trip in trips %}
-        <div class="trip-card">
-            <div class="trip-header">
-                <h3>{{ trip.destination }}</h3>
-                <span class="trip-badge trip-badge-{{ trip.travel_style.value }}">{{ trip.travel_style_display }}</span>
-            </div>
-            <div class="trip-details">
-                <p><strong>📅 Dates:</strong> {{ trip.start_date }} to {{ trip.end_date }}</p>
-                <p><strong>⏱️ Duration:</strong> {{ trip.duration }} days</p>
-                <p><strong>👥 Travelers:</strong> {{ trip.travelers|length }}</p>
-                <p><strong>{{ trip.transport_display }}</strong></p>
-            </div>
-            <div class="trip-actions">
-                <a href="{{ url_for('trips.view_trip', trip_id=trip.id) }}" class="btn btn-primary">View Details</a>
-            </div>
+    <section aria-labelledby="trips-heading" class="section-block">
+        <div class="section-header">
+            <h2 id="trips-heading"><span aria-hidden="true">✈️</span> Upcoming Trips</h2>
         </div>
-        {% endfor %}
-    </div>
+        <div class="trips-grid" role="list">
+            {% for trip in trips %}
+            <article class="trip-card" role="listitem">
+                <div class="trip-header">
+                    <h3>{{ trip.destination }}</h3>
+                    <span class="trip-badge trip-badge-{{ trip.travel_style.value }}">{{ trip.travel_style_display }}</span>
+                </div>
+                <div class="trip-details">
+                    <p><strong><span aria-hidden="true">📅</span> Dates:</strong> {{ trip.start_date }} to {{ trip.end_date }}</p>
+                    <p><strong><span aria-hidden="true">⏱️</span> Duration:</strong> {{ trip.duration }} days</p>
+                    <p><strong><span aria-hidden="true">👥</span> Travelers:</strong> {{ trip.travelers|length }}</p>
+                    <p><strong>{{ trip.transport_display }}</strong></p>
+                </div>
+                <div class="trip-actions">
+                    <a href="{{ url_for('trips.view_trip', trip_id=trip.id) }}" class="btn btn-primary" aria-label="View details for {{ trip.destination }}">View Details</a>
+                </div>
+            </article>
+            {% endfor %}
+        </div>
+    </section>
     {% else %}
-    <div class="empty-state">
-        <div class="empty-icon">✈️</div>
-        <h2>No trips yet!</h2>
+    <section class="empty-state" aria-labelledby="empty-heading">
+        <div class="empty-icon" aria-hidden="true">✈️</div>
+        <h2 id="empty-heading">No trips yet!</h2>
         <p>Start planning your next adventure by creating your first trip.</p>
         <a href="{{ url_for('trips.new_trip') }}" class="btn btn-primary btn-large">Create Your First Trip</a>
-    </div>
+    </section>
     {% endif %}
 </div>
 {% endblock %}

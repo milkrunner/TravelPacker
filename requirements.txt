@@ -35,6 +35,10 @@ bleach==6.3.0  # XSS protection for user-generated content
 pytest==7.4.4
 pytest-cov==4.1.0
 
+# Code Quality
+ruff>=0.9.6  # Linter and formatter (replaces Black, Flake8, isort)
+pre-commit>=4.0.0  # Git hooks for code quality checks
+
 # Security - Dependency Scanning
 pip-audit==2.10.0  # Latest version with enhanced OSV database support
 

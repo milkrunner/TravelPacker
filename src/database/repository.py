@@ -4,69 +4,67 @@ Repository pattern for database operations
 
 import json
 import uuid
-from typing import List, Optional
-from sqlalchemy.orm import Session
-from src.database import get_session, close_session
-from src.database.models import Trip as DBTrip, PackingItem as DBPackingItem, Traveler as DBTraveler, User as DBUser
-from src.models.trip import Trip, TravelStyle, TransportMethod
-from src.models.packing_item import PackingItem, ItemCategory
-from src.models.traveler import Traveler, TravelerType
+
+from src.database import close_session, get_session
+from src.database.models import PackingItem as DBPackingItem
+from src.database.models import Traveler as DBTraveler
+from src.database.models import Trip as DBTrip
+from src.database.models import User as DBUser
+from src.models.packing_item import PackingItem
+from src.models.trip import Trip
 
 
 class UserRepository:
     """Repository for User operations"""
-    
+
     @staticmethod
     def create(username: str, email: str, password: str) -> DBUser:
         """Create a new user"""
         session = get_session()
         try:
-            user = DBUser(
-                id=f"user_{uuid.uuid4().hex[:8]}",
-                username=username,
-                email=email
-            )
+            user = DBUser(id=f"user_{uuid.uuid4().hex[:8]}", username=username, email=email)
             user.set_password(password)
-            
+
             session.add(user)
             session.commit()
             session.refresh(user)
-            
+
             return user
         finally:
             close_session()
-    
+
     @staticmethod
-    def get(user_id: str) -> Optional[DBUser]:
+    def get(user_id: str) -> DBUser | None:
         """Get user by ID"""
         session = get_session()
         try:
             return session.query(DBUser).filter(DBUser.id == user_id).first()
         finally:
             close_session()
-    
+
     @staticmethod
-    def get_by_username(username: str) -> Optional[DBUser]:
+    def get_by_username(username: str) -> DBUser | None:
         """Get user by username"""
         session = get_session()
         try:
             return session.query(DBUser).filter(DBUser.username == username).first()
         finally:
             close_session()
-    
+
     @staticmethod
-    def get_by_email(email: str) -> Optional[DBUser]:
+    def get_by_email(email: str) -> DBUser | None:
         """Get user by email"""
         session = get_session()
         try:
             return session.query(DBUser).filter(DBUser.email == email).first()
         finally:
             close_session()
-    
+
     @staticmethod
     def update_last_login(user_id: str) -> None:
         """Update user's last login timestamp"""
         from datetime import datetime
+
         session = get_session()
         try:
             user = session.query(DBUser).filter(DBUser.id == user_id).first()
@@ -79,7 +77,7 @@ class UserRepository:
 
 class TripRepository:
     """Repository for Trip operations"""
-    
+
     @staticmethod
     def create(trip: Trip, user_id: str) -> Trip:
         """Create a new trip in database"""
@@ -88,7 +86,7 @@ class TripRepository:
             # Generate ID if not exists
             if not trip.id:
                 trip.id = f"trip_{uuid.uuid4().hex[:8]}"
-            
+
             # Create DB model
             db_trip = DBTrip(
                 id=trip.id,
@@ -101,31 +99,31 @@ class TripRepository:
                 transportation=trip.transportation,
                 activities=json.dumps(trip.activities),
                 special_notes=trip.special_notes,
-                weather_conditions=trip.weather_conditions
+                weather_conditions=trip.weather_conditions,
             )
-            
+
             # Add travelers
-            for i, traveler_name in enumerate(trip.travelers):
+            for _i, traveler_name in enumerate(trip.travelers):
                 db_traveler = DBTraveler(
                     id=f"traveler_{uuid.uuid4().hex[:8]}",
                     trip_id=trip.id,
                     name=traveler_name,
-                    traveler_type='adult',  # Default
+                    traveler_type="adult",  # Default
                     special_needs=json.dumps([]),
-                    preferences=json.dumps([])
+                    preferences=json.dumps([]),
                 )
                 db_trip.travelers.append(db_traveler)
-            
+
             session.add(db_trip)
             session.commit()
             session.refresh(db_trip)
-            
+
             return TripRepository._to_domain(db_trip)
         finally:
             close_session()
-    
+
     @staticmethod
-    def get(trip_id: str, user_id: Optional[str] = None) -> Optional[Trip]:
+    def get(trip_id: str, user_id: str | None = None) -> Trip | None:
         """Get a trip by ID, optionally verify ownership"""
         session = get_session()
         try:
@@ -138,9 +136,9 @@ class TripRepository:
             return None
         finally:
             close_session()
-    
+
     @staticmethod
-    def list_all(user_id: Optional[str] = None) -> List[Trip]:
+    def list_all(user_id: str | None = None) -> list[Trip]:
         """List all trips, optionally filtered by user"""
         session = get_session()
         try:
@@ -151,31 +149,31 @@ class TripRepository:
             return [TripRepository._to_domain(db_trip) for db_trip in db_trips]
         finally:
             close_session()
-    
+
     @staticmethod
-    def update(trip_id: str, **kwargs) -> Optional[Trip]:
+    def update(trip_id: str, **kwargs) -> Trip | None:
         """Update a trip"""
         session = get_session()
         try:
             db_trip = session.query(DBTrip).filter(DBTrip.id == trip_id).first()
             if not db_trip:
                 return None
-            
+
             # Update fields
             for key, value in kwargs.items():
                 if hasattr(db_trip, key) and value is not None:
-                    if key == 'activities':
+                    if key == "activities":
                         setattr(db_trip, key, json.dumps(value))
                     else:
                         setattr(db_trip, key, value)
-            
+
             session.commit()
             session.refresh(db_trip)
-            
+
             return TripRepository._to_domain(db_trip)
         finally:
             close_session()
-    
+
     @staticmethod
     def delete(trip_id: str) -> bool:
         """Delete a trip"""
@@ -189,7 +187,7 @@ class TripRepository:
             return False
         finally:
             close_session()
-    
+
     @staticmethod
     def _to_domain(db_trip: DBTrip) -> Trip:
         """Convert database model to domain model"""
@@ -205,14 +203,14 @@ class TripRepository:
             activities=json.loads(db_trip.activities) if db_trip.activities else [],
             special_notes=db_trip.special_notes,
             weather_conditions=db_trip.weather_conditions,
-            is_template=db_trip.is_template if hasattr(db_trip, 'is_template') else False,
-            template_name=db_trip.template_name if hasattr(db_trip, 'template_name') else None
+            is_template=db_trip.is_template if hasattr(db_trip, "is_template") else False,
+            template_name=db_trip.template_name if hasattr(db_trip, "template_name") else None,
         )
 
 
 class PackingItemRepository:
     """Repository for PackingItem operations"""
-    
+
     @staticmethod
     def create(item: PackingItem) -> PackingItem:
         """Create a new packing item"""
@@ -220,7 +218,7 @@ class PackingItemRepository:
         try:
             if not item.id:
                 item.id = f"item_{uuid.uuid4().hex[:8]}"
-            
+
             db_item = DBPackingItem(
                 id=item.id,
                 trip_id=item.trip_id,
@@ -230,19 +228,19 @@ class PackingItemRepository:
                 is_packed=item.is_packed,
                 is_essential=item.is_essential,
                 notes=item.notes,
-                ai_suggested=item.ai_suggested
+                ai_suggested=item.ai_suggested,
             )
-            
+
             session.add(db_item)
             session.commit()
             session.refresh(db_item)
-            
+
             return PackingItemRepository._to_domain(db_item)
         finally:
             close_session()
-    
+
     @staticmethod
-    def get(item_id: str) -> Optional[PackingItem]:
+    def get(item_id: str) -> PackingItem | None:
         """Get a packing item by ID"""
         session = get_session()
         try:
@@ -252,40 +250,43 @@ class PackingItemRepository:
             return None
         finally:
             close_session()
-    
+
     @staticmethod
-    def get_by_trip(trip_id: str) -> List[PackingItem]:
+    def get_by_trip(trip_id: str) -> list[PackingItem]:
         """Get all items for a trip"""
         session = get_session()
         try:
-            db_items = session.query(DBPackingItem).filter(
-                DBPackingItem.trip_id == trip_id
-            ).order_by(DBPackingItem.display_order.asc(), DBPackingItem.created_at.asc()).all()
-            
+            db_items = (
+                session.query(DBPackingItem)
+                .filter(DBPackingItem.trip_id == trip_id)
+                .order_by(DBPackingItem.display_order.asc(), DBPackingItem.created_at.asc())
+                .all()
+            )
+
             return [PackingItemRepository._to_domain(db_item) for db_item in db_items]
         finally:
             close_session()
-    
+
     @staticmethod
-    def update(item_id: str, **kwargs) -> Optional[PackingItem]:
+    def update(item_id: str, **kwargs) -> PackingItem | None:
         """Update a packing item"""
         session = get_session()
         try:
             db_item = session.query(DBPackingItem).filter(DBPackingItem.id == item_id).first()
             if not db_item:
                 return None
-            
+
             for key, value in kwargs.items():
                 if hasattr(db_item, key) and value is not None:
                     setattr(db_item, key, value)
-            
+
             session.commit()
             session.refresh(db_item)
-            
+
             return PackingItemRepository._to_domain(db_item)
         finally:
             close_session()
-    
+
     @staticmethod
     def delete(item_id: str) -> bool:
         """Delete a packing item"""
@@ -299,7 +300,33 @@ class PackingItemRepository:
             return False
         finally:
             close_session()
-    
+
+    @staticmethod
+    def get_history(user_id: str) -> list[dict]:
+        """Get packing history for a user: items that were reviewed (actually_used is not None)"""
+        session = get_session()
+        try:
+            db_items = (
+                session.query(DBPackingItem)
+                .join(DBTrip, DBPackingItem.trip_id == DBTrip.id)
+                .filter(DBTrip.user_id == user_id, DBPackingItem.actually_used.isnot(None))
+                .all()
+            )
+            results = []
+            for item in db_items:
+                results.append(
+                    {
+                        "name": item.name,
+                        "category": item.category.value if item.category else "other",
+                        "actually_used": item.actually_used,
+                        "ai_suggested": item.ai_suggested,
+                        "trip_id": item.trip_id,
+                    }
+                )
+            return results
+        finally:
+            close_session()
+
     @staticmethod
     def _to_domain(db_item: DBPackingItem) -> PackingItem:
         """Convert database model to domain model"""
@@ -313,5 +340,6 @@ class PackingItemRepository:
             is_essential=db_item.is_essential,
             notes=db_item.notes,
             ai_suggested=db_item.ai_suggested,
-            display_order=db_item.display_order if hasattr(db_item, 'display_order') else 0
+            actually_used=db_item.actually_used if hasattr(db_item, "actually_used") else None,
+            display_order=db_item.display_order if hasattr(db_item, "display_order") else 0,
         )

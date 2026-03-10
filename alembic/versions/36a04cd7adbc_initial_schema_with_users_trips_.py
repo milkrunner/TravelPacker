@@ -1,18 +1,16 @@
 """Initial schema with users, trips, travelers, packing_items, and audit_log
 
 Revision ID: 36a04cd7adbc
-Revises: 
+Revises:
 Create Date: 2025-10-24 11:34:37.033592
 
 """
-from typing import Sequence, Union
 
-from alembic import op
-import sqlalchemy as sa
-
+from collections.abc import Sequence
+from typing import Union
 
 # revision identifiers, used by Alembic.
-revision: str = '36a04cd7adbc'
+revision: str = "36a04cd7adbc"
 down_revision: Union[str, None] = None
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None

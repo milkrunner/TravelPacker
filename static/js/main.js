@@ -4,23 +4,49 @@
 (function initDarkMode() {
     const darkModeToggle = document.getElementById('darkModeToggle');
     const body = document.body;
-    
+
     // Check for saved user preference, default to light mode
     const savedTheme = localStorage.getItem('theme');
     if (savedTheme === 'dark') {
         body.classList.add('dark-mode');
+        if (darkModeToggle) darkModeToggle.setAttribute('aria-checked', 'true');
     }
-    
+
     // Toggle dark mode
     if (darkModeToggle) {
         darkModeToggle.addEventListener('click', () => {
             body.classList.toggle('dark-mode');
-            
-            // Save preference
-            if (body.classList.contains('dark-mode')) {
-                localStorage.setItem('theme', 'dark');
-            } else {
-                localStorage.setItem('theme', 'light');
+            const isDark = body.classList.contains('dark-mode');
+            darkModeToggle.setAttribute('aria-checked', String(isDark));
+            localStorage.setItem('theme', isDark ? 'dark' : 'light');
+        });
+    }
+})();
+
+// Mobile Navigation Toggle
+(function initNavToggle() {
+    const navToggle = document.getElementById('navToggle');
+    const navLinks = document.getElementById('navLinks');
+
+    if (navToggle && navLinks) {
+        navToggle.addEventListener('click', () => {
+            const isOpen = navLinks.classList.toggle('nav-open');
+            navToggle.setAttribute('aria-expanded', String(isOpen));
+        });
+
+        // Close menu when clicking a link
+        navLinks.querySelectorAll('.nav-link').forEach(link => {
+            link.addEventListener('click', () => {
+                navLinks.classList.remove('nav-open');
+                navToggle.setAttribute('aria-expanded', 'false');
+            });
+        });
+
+        // Close menu on outside click
+        document.addEventListener('click', (event) => {
+            if (!navToggle.contains(event.target) && !navLinks.contains(event.target)) {
+                navLinks.classList.remove('nav-open');
+                navToggle.setAttribute('aria-expanded', 'false');
             }
         });
     }
@@ -44,18 +70,37 @@ document.addEventListener('keydown', function(event) {
     }
 });
 
-// Show loading state for forms (but allow submission to continue)
+// Show loading state for forms
 document.querySelectorAll('form').forEach(form => {
-    form.addEventListener('submit', function(event) {
+    form.addEventListener('submit', function() {
         const submitBtn = this.querySelector('button[type="submit"]');
         if (submitBtn && !submitBtn.dataset.noLoading) {
-            // Don't disable the button, just change the text
             submitBtn.dataset.originalText = submitBtn.textContent;
-            submitBtn.textContent = 'Processing...';
-            // Let the form submit naturally
+            submitBtn.innerHTML = '<span class="loading-spinner"></span> Processing...';
         }
     });
 });
+
+// Loading overlay helper
+window.NikNotes = window.NikNotes || {};
+window.NikNotes.showLoading = function(message) {
+    let overlay = document.getElementById('loadingOverlay');
+    if (!overlay) {
+        overlay = document.createElement('div');
+        overlay.id = 'loadingOverlay';
+        overlay.className = 'loading-overlay';
+        overlay.setAttribute('role', 'alert');
+        overlay.setAttribute('aria-live', 'assertive');
+        overlay.innerHTML = '<div class="loading-spinner loading-spinner--large"></div><div class="loading-overlay-text"></div>';
+        document.body.appendChild(overlay);
+    }
+    overlay.querySelector('.loading-overlay-text').textContent = message || 'Loading...';
+    overlay.classList.add('active');
+};
+window.NikNotes.hideLoading = function() {
+    const overlay = document.getElementById('loadingOverlay');
+    if (overlay) overlay.classList.remove('active');
+};
 
 // Auto-hide success messages
 setTimeout(() => {
@@ -100,5 +145,3 @@ document.querySelectorAll('.trip-card, .packing-item').forEach(card => {
     card.style.transition = 'opacity 0.5s ease, transform 0.5s ease';
     observer.observe(card);
 });
-
-console.log('🎒 NikNotes loaded successfully!');

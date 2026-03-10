@@ -2,29 +2,28 @@
 Trip management service
 """
 
-from typing import List, Optional
-from src.models.trip import Trip, TravelStyle, TransportMethod
 from src.database.repository import TripRepository
+from src.models.trip import TransportMethod, TravelStyle, Trip
 
 
 class TripService:
     """Service for managing trips"""
-    
+
     def __init__(self, use_database: bool = True):
         self.use_database = use_database
         self.trips = {}  # In-memory fallback
-    
+
     def create_trip(
         self,
         destination: str,
         start_date: str,
         end_date: str,
-        travelers: List[str],
-        user_id: Optional[str] = None,
+        travelers: list[str],
+        user_id: str | None = None,
         travel_style: str = "leisure",
         transportation: str = "flight",
-        activities: Optional[List[str]] = None,
-        special_notes: Optional[str] = None
+        activities: list[str] | None = None,
+        special_notes: str | None = None,
     ) -> Trip:
         """Create a new trip"""
         trip = Trip(
@@ -35,9 +34,9 @@ class TripService:
             travel_style=TravelStyle(travel_style),
             transportation=TransportMethod(transportation),
             activities=activities or [],
-            special_notes=special_notes
+            special_notes=special_notes,
         )
-        
+
         if self.use_database:
             return TripRepository.create(trip, user_id or "default_user")
         else:
@@ -46,34 +45,34 @@ class TripService:
             trip.id = trip_id
             self.trips[trip_id] = trip
             return trip
-    
-    def get_trip(self, trip_id: str, user_id: Optional[str] = None) -> Optional[Trip]:
+
+    def get_trip(self, trip_id: str, user_id: str | None = None) -> Trip | None:
         """Get a trip by ID, optionally verify ownership"""
         if self.use_database:
             return TripRepository.get(trip_id, user_id)
         else:
             return self.trips.get(trip_id)
-    
-    def list_trips(self, user_id: Optional[str] = None) -> List[Trip]:
+
+    def list_trips(self, user_id: str | None = None) -> list[Trip]:
         """List all trips, optionally filtered by user"""
         if self.use_database:
             return TripRepository.list_all(user_id)
         else:
             return list(self.trips.values())
-    
-    def update_trip(self, trip_id: str, **kwargs) -> Optional[Trip]:
+
+    def update_trip(self, trip_id: str, **kwargs) -> Trip | None:
         """Update trip details and invalidate AI suggestion cache
-        
+
         Cache invalidation strategy:
         - ALWAYS invalidates AI suggestions cache when trip context changes
         - Context changes include: destination, dates, travelers, style, transportation, activities
         - Weather updates also trigger invalidation as they affect packing suggestions
-        
+
         Args:
             trip_id: Trip identifier
-            **kwargs: Fields to update (destination, start_date, end_date, travelers, 
+            **kwargs: Fields to update (destination, start_date, end_date, travelers,
                      travel_style, transportation, activities, weather_conditions, etc.)
-        
+
         Returns:
             Updated Trip object or None if not found
         """
@@ -83,49 +82,51 @@ class TripService:
             trip = self.trips.get(trip_id)
             if not trip:
                 return None
-            
+
             # Update fields
             for key, value in kwargs.items():
                 if hasattr(trip, key):
                     setattr(trip, key, value)
             result = trip
-        
+
         # Invalidate AI suggestion cache since trip context changed
         # This ensures fresh AI suggestions on next generation request
         if result:
             try:
                 from src.services.cache_service import get_cache_service
+
                 cache = get_cache_service()
                 cache.invalidate_ai_suggestions_for_trip(trip_id)
                 cache.invalidate_trip(trip_id)
-            except Exception as e:
-                print(f"⚠️  Cache invalidation warning: {e}")
-        
+            except Exception:
+                pass
+
         return result
-    
+
     def delete_trip(self, trip_id: str) -> bool:
         """Delete a trip and invalidate all associated caches
-        
+
         Cache cleanup:
         - Invalidates AI suggestions cache
         - Invalidates trip metadata cache
         - Ensures no stale data remains after deletion
-        
+
         Args:
             trip_id: Trip identifier
-        
+
         Returns:
             True if trip was deleted, False otherwise
         """
         # Invalidate caches before deletion
         try:
             from src.services.cache_service import get_cache_service
+
             cache = get_cache_service()
             cache.invalidate_ai_suggestions_for_trip(trip_id)
             cache.invalidate_trip(trip_id)
-        except Exception as e:
-            print(f"⚠️  Cache invalidation warning: {e}")
-        
+        except Exception:
+            pass
+
         if self.use_database:
             return TripRepository.delete(trip_id)
         else:

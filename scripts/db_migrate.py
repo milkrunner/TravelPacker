@@ -10,8 +10,8 @@ Usage:
     python scripts/db_migrate.py create "description"  # Create new migration
 """
 
-import sys
 import os
+import sys
 from pathlib import Path
 
 # Add project root to path
@@ -19,8 +19,9 @@ project_root = Path(__file__).parent.parent
 sys.path.insert(0, str(project_root))
 
 from alembic.config import Config
-from alembic import command
 from dotenv import load_dotenv
+
+from alembic import command
 
 # Load environment variables
 load_dotenv()
@@ -28,16 +29,16 @@ load_dotenv()
 
 def get_alembic_config():
     """Get Alembic configuration"""
-    alembic_ini = project_root / 'alembic.ini'
+    alembic_ini = project_root / "alembic.ini"
     if not alembic_ini.exists():
         print(f"❌ alembic.ini not found at {alembic_ini}")
         sys.exit(1)
-    
+
     config = Config(str(alembic_ini))
     return config
 
 
-def upgrade(revision='head'):
+def upgrade(revision="head"):
     """Apply migrations up to specified revision (default: head)"""
     print(f"🔄 Upgrading database to revision: {revision}")
     config = get_alembic_config()
@@ -45,7 +46,7 @@ def upgrade(revision='head'):
     print("✅ Database upgraded successfully")
 
 
-def downgrade(revision='-1'):
+def downgrade(revision="-1"):
     """Rollback migrations to specified revision (default: -1 for one step back)"""
     print(f"🔄 Downgrading database to revision: {revision}")
     config = get_alembic_config()
@@ -71,16 +72,16 @@ def create(message):
     """Create a new migration"""
     if not message:
         print("❌ Please provide a migration message")
-        print("   Usage: python scripts/db_migrate.py create \"your message here\"")
+        print('   Usage: python scripts/db_migrate.py create "your message here"')
         sys.exit(1)
-    
+
     print(f"📝 Creating new migration: {message}")
     config = get_alembic_config()
     command.revision(config, message=message, autogenerate=True)
     print("✅ Migration created successfully")
 
 
-def stamp(revision='head'):
+def stamp(revision="head"):
     """Mark the database as being at a specific revision without running migrations"""
     print(f"🏷️  Stamping database with revision: {revision}")
     config = get_alembic_config()
@@ -98,33 +99,33 @@ def main():
     if len(sys.argv) < 2:
         show_help()
         sys.exit(1)
-    
+
     action = sys.argv[1].lower()
-    
+
     # Check DATABASE_URL is set
-    if not os.getenv('DATABASE_URL'):
+    if not os.getenv("DATABASE_URL"):
         print("❌ DATABASE_URL environment variable is not set")
         print("   Please set it to your PostgreSQL connection string")
         sys.exit(1)
-    
+
     try:
-        if action == 'upgrade':
-            revision = sys.argv[2] if len(sys.argv) > 2 else 'head'
+        if action == "upgrade":
+            revision = sys.argv[2] if len(sys.argv) > 2 else "head"
             upgrade(revision)
-        elif action == 'downgrade':
-            revision = sys.argv[2] if len(sys.argv) > 2 else '-1'
+        elif action == "downgrade":
+            revision = sys.argv[2] if len(sys.argv) > 2 else "-1"
             downgrade(revision)
-        elif action == 'current':
+        elif action == "current":
             current()
-        elif action == 'history':
+        elif action == "history":
             history()
-        elif action == 'create':
-            message = ' '.join(sys.argv[2:]) if len(sys.argv) > 2 else ''
+        elif action == "create":
+            message = " ".join(sys.argv[2:]) if len(sys.argv) > 2 else ""
             create(message)
-        elif action == 'stamp':
-            revision = sys.argv[2] if len(sys.argv) > 2 else 'head'
+        elif action == "stamp":
+            revision = sys.argv[2] if len(sys.argv) > 2 else "head"
             stamp(revision)
-        elif action in ['help', '--help', '-h']:
+        elif action in ["help", "--help", "-h"]:
             show_help()
         else:
             print(f"❌ Unknown action: {action}")
@@ -136,9 +137,10 @@ def main():
     except Exception as e:
         print(f"❌ Error: {e}")
         import traceback
+
         traceback.print_exc()
         sys.exit(1)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

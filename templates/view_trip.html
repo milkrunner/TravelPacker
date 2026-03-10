@@ -41,6 +41,13 @@ endblock %} {% block content %}
       </button>
       {% endif %}
       <button
+        id="reviewTripBtn"
+        class="btn btn-secondary"
+        aria-label="Review which items you actually used"
+      >
+        📊 Review Trip
+      </button>
+      <button
         id="deleteTripBtn"
         class="btn btn-danger"
       >
@@ -285,6 +292,40 @@ endblock %} {% block content %}
       <button id="confirmDeleteTripBtn" class="btn btn-danger">
         Delete Trip
       </button>
+    </div>
+  </div>
+</div>
+
+<!-- Review Trip Modal -->
+<div id="reviewTripModal" class="modal" role="dialog" aria-labelledby="reviewModalTitle">
+  <div class="modal-content" style="max-width: 600px">
+    <div class="modal-header">
+      <h2 id="reviewModalTitle">📊 Review Your Trip</h2>
+      <button class="close-btn close-review-modal" aria-label="Close">&times;</button>
+    </div>
+    <div style="padding: 16px">
+      <p style="margin-bottom: 16px; color: var(--text-secondary);">
+        Mark which items you actually used on this trip. This helps improve future suggestions.
+      </p>
+      <div id="reviewItemsList" class="review-items-list">
+        {% for item in items %}
+        <div class="review-item" data-item-id="{{ item.id }}">
+          <span class="review-item-name">{{ item.name }}</span>
+          <div class="review-buttons">
+            <button type="button" class="review-btn review-btn-used {% if item.actually_used == true %}active{% endif %}" data-used="true" aria-label="Mark {{ item.name }} as used">
+              ✅ Used
+            </button>
+            <button type="button" class="review-btn review-btn-unused {% if item.actually_used == false %}active{% endif %}" data-used="false" aria-label="Mark {{ item.name }} as not used">
+              ❌ Not used
+            </button>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button type="button" class="cancel-review-btn btn btn-secondary">Cancel</button>
+      <button type="button" id="saveReviewBtn" class="btn btn-primary">Save Review</button>
     </div>
   </div>
 </div>
@@ -573,6 +614,64 @@ endblock %} {% block content %}
       });
   }
 
+  // Review Trip functionality
+  function showReviewModal() {
+    document.getElementById('reviewTripModal').style.display = 'flex';
+  }
+
+  function closeReviewModal() {
+    document.getElementById('reviewTripModal').style.display = 'none';
+  }
+
+  function saveReview() {
+    const reviews = [];
+    document.querySelectorAll('.review-item').forEach(item => {
+      const itemId = item.dataset.itemId;
+      const usedBtn = item.querySelector('.review-btn-used');
+      const unusedBtn = item.querySelector('.review-btn-unused');
+      if (usedBtn.classList.contains('active')) {
+        reviews.push({ item_id: itemId, actually_used: true });
+      } else if (unusedBtn.classList.contains('active')) {
+        reviews.push({ item_id: itemId, actually_used: false });
+      }
+    });
+
+    if (reviews.length === 0) {
+      alert('Please review at least one item before saving.');
+      return;
+    }
+
+    const btn = document.getElementById('saveReviewBtn');
+    btn.innerHTML = '<span class="loading-spinner"></span> Saving...';
+    btn.disabled = true;
+
+    fetch(`/api/trip/${tripId}/review`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRFToken': window.csrfToken
+      },
+      body: JSON.stringify({ reviews: reviews })
+    })
+    .then(response => response.json())
+    .then(data => {
+      if (data.success) {
+        closeReviewModal();
+        location.reload();
+      } else {
+        alert('Failed to save review: ' + (data.error || 'Unknown error'));
+        btn.textContent = 'Save Review';
+        btn.disabled = false;
+      }
+    })
+    .catch(error => {
+      console.error('Error saving review:', error);
+      alert('Failed to save review. Please try again.');
+      btn.textContent = 'Save Review';
+      btn.disabled = false;
+    });
+  }
+
   // Event Listeners (CSP-compliant)
   document.addEventListener('DOMContentLoaded', function() {
     // Regenerate suggestions button
@@ -652,6 +751,34 @@ endblock %} {% block content %}
     if (confirmDeleteItemBtn) {
       confirmDeleteItemBtn.addEventListener('click', confirmDeleteItem);
     }
+
+    // Review trip button
+    const reviewTripBtn = document.getElementById('reviewTripBtn');
+    if (reviewTripBtn) {
+      reviewTripBtn.addEventListener('click', showReviewModal);
+    }
+
+    // Review modal close
+    document.querySelectorAll('.close-review-modal, .cancel-review-btn').forEach(btn => {
+      btn.addEventListener('click', closeReviewModal);
+    });
+
+    // Save review button
+    const saveReviewBtn = document.getElementById('saveReviewBtn');
+    if (saveReviewBtn) {
+      saveReviewBtn.addEventListener('click', saveReview);
+    }
+
+    // Review item toggle buttons
+    document.querySelectorAll('.review-btn').forEach(btn => {
+      btn.addEventListener('click', function() {
+        const parent = this.closest('.review-item');
+        const isUsed = this.dataset.used === 'true';
+        // Toggle: deactivate sibling, activate this
+        parent.querySelectorAll('.review-btn').forEach(b => b.classList.remove('active'));
+        this.classList.add('active');
+      });
+    });
   });
 </script>
 {% endblock %}

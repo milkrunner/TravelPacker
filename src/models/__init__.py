@@ -2,16 +2,16 @@
 Data models for NikNotes
 """
 
-from src.models.trip import Trip, TravelStyle, TransportMethod
-from src.models.packing_item import PackingItem, ItemCategory
+from src.models.packing_item import ItemCategory, PackingItem
 from src.models.traveler import Traveler, TravelerType
+from src.models.trip import TransportMethod, TravelStyle, Trip
 
 __all__ = [
-    "Trip",
-    "TravelStyle",
-    "TransportMethod",
-    "PackingItem",
     "ItemCategory",
+    "PackingItem",
+    "TransportMethod",
+    "TravelStyle",
     "Traveler",
     "TravelerType",
+    "Trip",
 ]

@@ -85,6 +85,15 @@ See [PDF Export](docs/features/pdf-export.md) for detailed export documentation.
 
 See [DARK_MODE.md](docs/DARK_MODE.md) for detailed dark mode documentation.
 
+### 📊 Packing History
+
+**Learn from your trips**:
+
+- Review items after each trip: mark what you actually used
+- Track usage patterns across trips
+- History-based insights for smarter future packing
+- See which AI suggestions were most helpful
+
 ### ✨ Key Benefits
 
 - ⚡ **Lightning fast**: 10-50ms AI responses with Redis caching

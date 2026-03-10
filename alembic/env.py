@@ -1,10 +1,9 @@
-from logging.config import fileConfig
 import os
 import sys
+from logging.config import fileConfig
 from pathlib import Path
 
-from sqlalchemy import engine_from_config
-from sqlalchemy import pool
+from sqlalchemy import engine_from_config, pool
 
 from alembic import context
 
@@ -17,11 +16,12 @@ config = context.config
 
 # Load DATABASE_URL from environment
 from dotenv import load_dotenv
+
 load_dotenv()
 
-database_url = os.getenv('DATABASE_URL')
+database_url = os.getenv("DATABASE_URL")
 if database_url:
-    config.set_main_option('sqlalchemy.url', database_url)
+    config.set_main_option("sqlalchemy.url", database_url)
 else:
     raise ValueError(
         "DATABASE_URL environment variable is required for migrations. "
@@ -35,8 +35,6 @@ if config.config_file_name is not None:
 
 # Import all models for autogenerate support
 from src.database import Base
-from src.database.models import User, Trip, Traveler, PackingItem
-from src.database.audit_models import AuditLog
 
 # Set target metadata for autogenerate
 target_metadata = Base.metadata
@@ -85,9 +83,7 @@ def run_migrations_online() -> None:
     )
 
     with connectable.connect() as connection:
-        context.configure(
-            connection=connection, target_metadata=target_metadata
-        )
+        context.configure(connection=connection, target_metadata=target_metadata)
 
         with context.begin_transaction():
             context.run_migrations()
