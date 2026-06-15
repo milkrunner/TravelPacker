@@ -40,7 +40,7 @@ ruff>=0.9.6  # Linter and formatter (replaces Black, Flake8, isort)
 pre-commit>=4.0.0  # Git hooks for code quality checks
 
 # Security - Dependency Scanning
-pip-audit==2.10.0  # Latest version with enhanced OSV database support
+pip-audit==2.10.1  # Latest version with enhanced OSV database support
 
 # Security Status:
 # ✅ All package vulnerabilities resolved (upgraded to latest secure versions)
