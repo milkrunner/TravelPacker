@@ -18,7 +18,7 @@ google-generativeai==0.8.6
 pydantic==2.13.4
 
 # Database
-sqlalchemy==2.0.51
+sqlalchemy==2.0.52
 psycopg2-binary==2.9.12
 alembic==1.19.0  # Database migrations
 
