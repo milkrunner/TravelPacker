@@ -9,7 +9,7 @@ python-dotenv==1.2.3
 requests==2.34.2
 
 # Google Sign-In (JWT verification)
-google-auth==2.57.0
+google-auth==2.57.1
 
 # AI/ML
 google-generativeai==0.8.6
