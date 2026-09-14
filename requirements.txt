@@ -19,7 +19,7 @@ pydantic==2.13.5
 
 # Database
 sqlalchemy==2.0.52
-psycopg2-binary==2.9.12
+psycopg2-binary==2.9.13
 alembic==1.19.1  # Database migrations
 
 # Performance & Caching
